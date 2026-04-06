@@ -1,0 +1,234 @@
+/**
+ * responsive-patch.css
+ * ─────────────────────────────────────────────────────────────
+ * Mobile-first responsive overrides for ORPHEUS.
+ * Targets the core layout pages that lack small-screen CSS:
+ *   home.html, profile.html, genre pages.
+ *
+ * HOW TO ADD
+ * ----------
+ * Add this ONE line inside the <head> of every HTML page,
+ * AFTER your existing stylesheet links:
+ *   <link rel="stylesheet" href="responsive-patch.css">
+ *
+ * WHY THIS MATTERS (QA report — TC-U10, Disadvantage #7 — severity MEDIUM)
+ * The core layout pages are desktop-first and break below 768px.
+ * ─────────────────────────────────────────────────────────────
+ */
+
+/* ── Global box model safety ───────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Prevent horizontal overflow ───────────────────────────── */
+body {
+  overflow-x: hidden;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TABLET  (≤ 1024px)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+
+  /* Sidebar collapses to icon-only strip */
+  .sidebar {
+    width: 72px !important;
+    overflow: hidden;
+  }
+
+  .sidebar .nav-label,
+  .sidebar .nav-text,
+  .sidebar .sidebar-logo-text,
+  .sidebar .user-name {
+    display: none !important;
+  }
+
+  /* Main content fills the freed space */
+  .main-content,
+  .content-area,
+  #main-content {
+    margin-left: 72px !important;
+    width: calc(100% - 72px) !important;
+  }
+
+  /* Card grids: from 4-5 columns → 3 */
+  .card-grid,
+  .songs-grid,
+  .artist-grid,
+  .album-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE  (≤ 768px)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Sidebar becomes a bottom navigation bar */
+  .sidebar {
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 60px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+    border-right: none !important;
+    z-index: 200 !important;
+    padding: 0 8px !important;
+  }
+
+  .sidebar .nav-label,
+  .sidebar .nav-text,
+  .sidebar .sidebar-logo-text,
+  .sidebar .user-section,
+  .sidebar .sidebar-logo {
+    display: none !important;
+  }
+
+  .sidebar .nav-item,
+  .sidebar .sidebar-nav-item {
+    flex-direction: column !important;
+    align-items: center !important;
+    font-size: 10px !important;
+    padding: 6px 12px !important;
+  }
+
+  /* Main content: no left margin, pad bottom for nav bar */
+  .main-content,
+  .content-area,
+  #main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-bottom: 80px !important;
+  }
+
+  /* Card grids: 2 columns on mobile */
+  .card-grid,
+  .songs-grid,
+  .artist-grid,
+  .album-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Banner / hero area */
+  .banner,
+  .hero-banner,
+  #greeting-banner {
+    padding: 20px 16px !important;
+    flex-direction: column !important;
+    text-align: center !important;
+    min-height: auto !important;
+  }
+
+  .banner h1,
+  .banner-title {
+    font-size: clamp(1.2rem, 5vw, 2rem) !important;
+  }
+
+  .banner-stats {
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+
+  /* Horizontal scrollers (trending row) */
+  .scroll-row,
+  .trending-scroll,
+  .tab-content-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 8px !important;
+  }
+
+  .scroll-row::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Top Artists dropdown */
+  .country-dropdown,
+  .artist-country-select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Music player — pin to bottom above nav bar */
+  .player-panel,
+  #player-panel,
+  .now-playing-bar {
+    bottom: 60px !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+
+  /* Profile page */
+  .profile-container,
+  .settings-container {
+    flex-direction: column !important;
+    padding: 16px !important;
+  }
+
+  .profile-sidebar,
+  .settings-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Equalizer */
+  .eq-container,
+  #equalizer-panel {
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+  }
+
+  .eq-band {
+    flex: 1 1 40px !important;
+    min-width: 36px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SMALL MOBILE  (≤ 480px)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+  /* Single column layout */
+  .card-grid,
+  .songs-grid,
+  .artist-grid,
+  .album-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Larger touch targets */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* OTP input sizing */
+  .otp-input,
+  .otp-digit {
+    width: 42px !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+  }
+}

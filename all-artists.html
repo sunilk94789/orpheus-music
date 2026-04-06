@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORPHEUS — All Artists</title>
+  <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="home_theme.css">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+  <div class="main-layout">
+    <main class="page-body">
+      <div class="content">
+
+        <!-- PAGE HEADER -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-top:8px;">
+          <button id="backBtn" onclick="history.back()" style="
+            display:flex;align-items:center;gap:8px;
+            background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;
+            color:rgba(191,201,209,0.85);
+            font-family:'Space Grotesk',sans-serif;
+            font-size:.82rem;font-weight:500;
+            padding:8px 16px;cursor:pointer;flex-shrink:0;
+            transition:background .18s;
+          " onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+             onmouseout="this.style.background='rgba(255,255,255,0.06)'">← Back</button>
+
+          <div style="flex:1;">
+            <h1 style="
+              font-family:'Orbitron',sans-serif;
+              font-size:2rem;font-weight:900;
+              letter-spacing:.08em;margin:0 0 2px;
+              text-transform:uppercase;
+              background:linear-gradient(90deg,#FF9B51 0%,#ffcf9b 50%,#FF9B51 100%);
+              -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            ">All Artists</h1>
+            <p style="
+              font-family:'Space Grotesk',sans-serif;
+              font-size:.82rem;color:rgba(191,201,209,.5);
+              letter-spacing:.05em;margin:0;
+            ">Everyone in your library</p>
+          </div>
+
+          <span id="artistCountBadge" style="
+            font-family:'Space Grotesk',sans-serif;
+            font-size:.78rem;font-weight:600;
+            background:linear-gradient(135deg,#FF9B51,#c06020);
+            color:#fff;border-radius:20px;padding:4px 14px;
+            letter-spacing:.04em;flex-shrink:0;display:none;
+          "></span>
+        </div>
+
+        <!-- DIVIDER -->
+        <div style="height:1px;background:linear-gradient(90deg,rgba(255,155,81,.5),rgba(255,255,255,.06),transparent);margin-bottom:28px;"></div>
+
+        <!-- SEARCH BAR -->
+        <div style="margin-bottom:28px;position:relative;max-width:420px;">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;opacity:.5;">🔍</span>
+          <input type="text" id="artistSearch" placeholder="Search artists…"
+            oninput="filterArtists(this.value)"
+            style="
+              width:100%;box-sizing:border-box;
+              background:rgba(255,255,255,0.05);
+              border:1px solid rgba(255,255,255,0.1);
+              border-radius:12px;
+              color:rgba(191,201,209,.9);
+              font-family:'Space Grotesk',sans-serif;
+              font-size:.88rem;
+              padding:10px 14px 10px 40px;
+              outline:none;
+              transition:border-color .18s,background .18s;
+            "
+            onfocus="this.style.borderColor='rgba(255,155,81,.5)';this.style.background='rgba(255,255,255,0.08)'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'">
+        </div>
+
+        <!-- ARTISTS GRID -->
+        <div id="allArtistsGrid" style="
+          display:grid;
+          grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+          gap:20px;
+        ">
+          <!-- Skeleton loaders -->
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+          <div class="artist-skeleton"></div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="noResults" style="display:none;text-align:center;padding:60px 20px;">
+          <div style="font-size:2.5rem;margin-bottom:12px;">🎤</div>
+          <p style="font-family:'Space Grotesk',sans-serif;color:rgba(191,201,209,.4);font-size:.9rem;">No artists match your search.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <style>
+    /* ── Artist card ── */
+    .all-artist-card {
+      display:flex;flex-direction:column;align-items:center;gap:10px;
+      cursor:pointer;padding:16px 8px;border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
+      transition:background .2s,transform .2s,box-shadow .2s;
+      text-decoration:none;
+    }
+    .all-artist-card:hover {
+      background:rgba(255,155,81,0.08);
+      border-color:rgba(255,155,81,0.25);
+      transform:translateY(-4px);
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+    }
+    .all-artist-avatar {
+      width:84px;height:84px;border-radius:50%;
+      overflow:hidden;flex-shrink:0;
+      border:2px solid rgba(255,255,255,0.08);
+      position:relative;
+    }
+    .all-artist-avatar img {
+      width:100%;height:100%;object-fit:cover;
+    }
+    .all-artist-initials {
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Orbitron',sans-serif;
+      font-size:1.3rem;font-weight:700;
+      color:rgba(255,255,255,.9);
+    }
+    .all-artist-name {
+      font-family:'Space Grotesk',sans-serif;
+      font-size:.78rem;font-weight:500;
+      color:rgba(191,201,209,.85);
+      text-align:center;word-break:break-word;
+      line-height:1.3;
+    }
+    .all-artist-badge {
+      font-family:'Space Grotesk',sans-serif;
+      font-size:.62rem;font-weight:600;
+      background:linear-gradient(135deg,rgba(255,155,81,.8),rgba(192,96,32,.8));
+      color:#fff;border-radius:8px;padding:2px 7px;
+      letter-spacing:.06em;text-transform:uppercase;
+    }
+    /* Skeleton */
+    @keyframes aa-shimmer {
+      0%{background-position:-400px 0} 100%{background-position:400px 0}
+    }
+    .artist-skeleton {
+      height:150px;border-radius:14px;
+      background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.10) 50%,rgba(255,255,255,.04) 75%);
+      background-size:800px 100%;
+      animation:aa-shimmer 1.4s infinite linear;
+    }
+    @media(max-width:600px){
+      .all-artist-avatar{width:68px;height:68px;}
+    }
+  </style>
+
+  <script>
+    const _AA_SB_URL = SUPABASE_URL;
+    const _AA_SB_KEY = SUPABASE_KEY;
+    const _AA_HEADERS = { apikey: _AA_SB_KEY, Authorization: `Bearer ${_AA_SB_KEY}`, Accept: 'application/json' };
+
+    /* Avatar colour derived from name (same palette as home.html) */
+    const AVATAR_COLORS = ['#FF9B51','#e07840','#25343F','#BFC9D1','#384f5e','#d07030','#2e4555','#95a8b5','#e88840','#c06020'];
+    function avatarColor(name) {
+      let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      return AVATAR_COLORS[h % AVATAR_COLORS.length];
+    }
+    function initials(name) {
+      const parts = name.trim().split(/\s+/);
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : name.slice(0, 2).toUpperCase();
+    }
+
+    /* All loaded artists (for search filtering) */
+    let _allArtists = [];
+
+    function renderGrid(artists) {
+      const grid = document.getElementById('allArtistsGrid');
+      const none = document.getElementById('noResults');
+      if (!artists.length) {
+        grid.innerHTML = '';
+        none.style.display = 'block';
+        return;
+      }
+      none.style.display = 'none';
+      grid.innerHTML = artists.map(a => {
+        const name = a.artist_name || '';
+        const color = avatarColor(name);
+        const abbr = initials(name);
+        const encoded = encodeURIComponent(name);
+        const isFeatured = a.is_featured;
+
+        const avatarInner = a.image_url
+          ? `<img src="${a.image_url}" alt="${name}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+             <div class="all-artist-initials" style="background:${color};display:none;">${abbr}</div>`
+          : `<div class="all-artist-initials" style="background:${color};">${abbr}</div>`;
+
+        return `
+        <div class="all-artist-card" onclick="window.location.href='playing.html?artist=${encoded}'">
+          <div class="all-artist-avatar">${avatarInner}</div>
+          <span class="all-artist-name">${name}</span>
+          ${isFeatured ? '<span class="all-artist-badge">Featured</span>' : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function filterArtists(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) { renderGrid(_allArtists); return; }
+      renderGrid(_allArtists.filter(a => (a.artist_name || '').toLowerCase().includes(q)));
+    }
+
+    async function loadAllArtists() {
+      const grid = document.getElementById('allArtistsGrid');
+      try {
+        /* 1. Fetch home_artists (featured, with images + priority) */
+        const featRes = await fetch(
+          `${_AA_SB_URL}/rest/v1/home_artists?select=artist_name,image_url,priority&order=priority.asc`,
+          { headers: _AA_HEADERS }
+        );
+        const featured = (await featRes.json()).map(a => ({ ...a, is_featured: true }));
+        const featuredNames = new Set(featured.map(a => (a.artist_name || '').toLowerCase()));
+
+        /* 2. Fetch all unique artists from songs table */
+        const songsRes = await fetch(
+          `${_AA_SB_URL}/rest/v1/songs?select=artist`,
+          { headers: _AA_HEADERS }
+        );
+        const songRows = await songsRes.json();
+        const uniqueFromSongs = [...new Set(songRows.map(r => r.artist).filter(Boolean))]
+          .filter(name => !featuredNames.has(name.toLowerCase()))
+          .sort()
+          .map(name => ({ artist_name: name, image_url: null, is_featured: false }));
+
+        /* Merge: featured first (sorted by priority), then rest alphabetically */
+        _allArtists = [...featured, ...uniqueFromSongs];
+
+        /* Update count badge */
+        const badge = document.getElementById('artistCountBadge');
+        badge.textContent = `${_allArtists.length} Artist${_allArtists.length !== 1 ? 's' : ''}`;
+        badge.style.display = 'inline-block';
+
+        renderGrid(_allArtists);
+
+      } catch (err) {
+        console.error('Could not load all artists:', err);
+        grid.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.85rem;padding:40px;text-align:center;grid-column:1/-1;">Could not load artists. Please try again.</div>';
+      }
+    }
+
+    loadAllArtists();
+
+    /* Theme sync */
+    function applyTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelectorAll('.all-artist-name').forEach(el => {
+        el.style.color = isDark ? 'rgba(191,201,209,0.85)' : '';
+      });
+    }
+    applyTheme();
+    new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  </script>
+
+  <!-- sidebar.js: injects topbar + sidebar, avatar click -> profile.html, night mode -->
+  <script src="sidebar.js"></script>
+  <script src="player.js"></script>
+<script type="module" src="./accessibility.js"></script>
+</body>
+</html>

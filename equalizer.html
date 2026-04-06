@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equalizer | Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* No scrolling anywhere on this page */
+        html,
+        body {
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* Content fills exact viewport height minus nav, no scroll */
+        .content {
+            overflow: hidden !important;
+            height: calc(100vh - var(--nav-height, 64px));
+            display: flex;
+            flex-direction: column;
+            padding: 18px 24px 14px;
+            gap: 0;
+            box-sizing: border-box;
+        }
+
+        /* Page title row */
+        .eq-page-header {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-shrink: 0;
+        }
+
+        .eq-page-header h1 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.18em;
+        }
+
+        .eq-status-chip {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            background: var(--bg-body);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2px 10px;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        .eq-status-chip.on {
+            color: var(--gold);
+            border-color: rgba(255, 155, 81, 0.4);
+            background: rgba(255, 155, 81, 0.08);
+        }
+
+        /* Main two-column layout */
+        .freq-layout {
+            flex: 1;
+            display: flex;
+            gap: 18px;
+            min-height: 0;
+            align-items: stretch;
+        }
+
+        /* ══ LEFT: Sliders column ══ */
+        .freq-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .freq-sliders-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 18px 22px 14px;
+            box-shadow: 0 4px 24px var(--shadow);
+            min-height: 0;
+            overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        .freq-sliders-area {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        .freq-db-labels {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4px 0;
+            min-width: fit-content;
+            flex-shrink: 0;
+        }
+
+        .freq-db-labels span {
+            font-family: var(--font-heading);
+            font-size: 0.62rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-body);
+            padding: 2px 6px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+        }
+
+        .freq-sliders {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            justify-content: space-around;
+            gap: 3px;
+            position: relative;
+            min-height: 0;
+        }
+
+        .freq-sliders::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: var(--card-border);
+            pointer-events: none;
+        }
+
+        .freq-sliders::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 25%;
+            height: 1px;
+            background: var(--card-border);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .freq-slider-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .freq-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            writing-mode: vertical-lr;
+            direction: rtl;
+            width: 6px;
+            height: 100%;
+            background: transparent;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .freq-slider:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .freq-slider::-webkit-slider-runnable-track {
+            width: 6px;
+            background: var(--bg-body);
+            border-radius: 3px;
+            border: 1px solid var(--card-border);
+        }
+
+        .freq-slider::-moz-range-track {
+            width: 6px;
+            background: var(--bg-body);
+            border-radius: 3px;
+        }
+
+        .freq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid var(--card-border);
+            box-shadow: 0 1px 5px rgba(37, 52, 63, 0.2);
+            cursor: grab;
+            margin-left: -6px;
+        }
+
+        .freq-slider:not(:disabled)::-webkit-slider-thumb {
+            border-color: var(--gold);
+            box-shadow: 0 0 8px rgba(255, 155, 81, 0.35);
+        }
+
+        .freq-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid var(--card-border);
+            cursor: grab;
+        }
+
+        .freq-slider:not(:disabled)::-moz-range-thumb {
+            border-color: var(--gold);
+        }
+
+        .freq-sliders-card.eq-active .freq-sliders::before {
+            background: rgba(255, 155, 81, 0.3);
+        }
+
+        .freq-sliders-card.eq-active .freq-sliders::after {
+            background: rgba(255, 155, 81, 0.15);
+        }
+
+        .freq-hz-labels {
+            display: flex;
+            justify-content: space-around;
+            padding-left: 54px;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+
+        .freq-hz-labels span {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-body);
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+            border: 1px solid var(--card-border);
+        }
+
+        .freq-bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            padding-top: 4px;
+        }
+
+        .freq-reset-btn {
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #fff;
+            background: var(--gold);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 26px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+            box-shadow: 0 4px 14px rgba(255, 155, 81, 0.4);
+        }
+
+        .freq-reset-btn:hover {
+            transform: scale(1.04);
+            background: var(--gold-dark);
+        }
+
+        .freq-toggle-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .freq-toggle-label {
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* ══ RIGHT: panels column ══ */
+        .freq-right {
+            width: 236px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+
+        /* Shared card style */
+        .freq-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 14px 15px;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: background 0.3s;
+        }
+
+        .freq-panel-label {
+            font-family: var(--font-heading);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .freq-panel-label::before {
+            content: '';
+            width: 3px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 2px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* Presets 2×5 grid */
+        .freq-presets-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .freq-preset-btn {
+            font-family: var(--font-sans);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-body);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 7px 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+        }
+
+        .freq-preset-btn:hover {
+            background: rgba(255, 155, 81, 0.08);
+            border-color: rgba(255, 155, 81, 0.35);
+            color: var(--gold);
+        }
+
+        .freq-preset-btn.active {
+            background: rgba(255, 155, 81, 0.13);
+            border-color: var(--gold);
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* Spatial */
+        .freq-spatial-label {
+            font-family: var(--font-heading);
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+
+        /* Live response — fills remaining height */
+        .freq-stats {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .freq-active-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .freq-active-name {
+            font-family: var(--font-heading);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.1em;
+        }
+
+        .freq-eq-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            background: rgba(255, 155, 81, 0.1);
+            color: var(--gold);
+            border: 1px solid rgba(255, 155, 81, 0.28);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-family: var(--font-sans);
+            transition: all 0.3s;
+        }
+
+        .freq-eq-badge.off {
+            background: var(--card-border);
+            color: var(--text-muted);
+            border-color: transparent;
+        }
+
+        /* Spectrum bars */
+        .freq-visualiser {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            min-height: 60px;
+            padding: 0 2px 2px;
+        }
+
+        .freq-vis-bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            min-height: 4px;
+            transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
+        }
+
+        /* Band level rows */
+        .freq-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .freq-level-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .freq-level-band {
+            font-family: var(--font-heading);
+            font-size: 0.58rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 32px;
+            flex-shrink: 0;
+        }
+
+        .freq-level-track {
+            flex: 1;
+            height: 4px;
+            background: var(--card-border);
+            border-radius: 2px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .freq-level-fill {
+            position: absolute;
+            height: 100%;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .freq-level-val {
+            font-family: var(--font-heading);
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            min-width: 28px;
+            text-align: right;
+            flex-shrink: 0;
+            transition: color 0.3s;
+        }
+    </style>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+</head>
+
+<body>
+
+    <!-- TOP NAV injected by sidebar.js -->
+
+    <div class="main-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <main class="content">
+
+            <!-- Page header -->
+            <div class="eq-page-header">
+                <h1>FREQUENCY — CHECK</h1>
+                <span class="eq-status-chip" id="eqChip">EQ off</span>
+            </div>
+
+            <div class="freq-layout">
+
+                <!-- LEFT: Sliders -->
+                <div class="freq-main">
+                    <div class="freq-sliders-card">
+                        <div class="freq-sliders-area">
+                            <div class="freq-db-labels">
+                                <span>+20</span>
+                                <span>+10</span>
+                                <span>0</span>
+                                <span>-10</span>
+                                <span>-20</span>
+                            </div>
+                            <div class="freq-sliders" id="freqSliders"></div>
+                        </div>
+
+                        <div class="freq-hz-labels" id="freqHzLabels"></div>
+
+                        <div class="freq-bottom-row">
+                            <button class="freq-reset-btn" id="btnReset">RESET</button>
+                            <div class="freq-toggle-area">
+                                <span class="freq-toggle-label">EQUALIZER</span>
+                                <label class="toggle">
+                                    <input type="checkbox" id="eqToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Panels -->
+                <div class="freq-right">
+
+                    <!-- Presets -->
+                    <div class="freq-panel">
+                        <div class="freq-panel-label">Presets</div>
+                        <div class="freq-presets-grid" id="freqPresets"></div>
+                    </div>
+
+                    <!-- Spatial Audio -->
+                    <div class="freq-panel">
+                        <div class="freq-spatial-label">SPATIAL AUDIO MODE</div>
+                        <div class="custom-select-wrapper">
+                            <button class="custom-select-btn" id="spatialBtn">Standard</button>
+                            <div class="custom-select-dropdown" id="spatialDropdown">
+                                <div class="custom-option selected" data-value="Standard">Standard</div>
+                                <div class="custom-option" data-value="Wide Stereo (3D)">Wide Stereo (3D)</div>
+                                <div class="custom-option" data-value="Spatialized (4D)">Spatialized (4D)</div>
+                                <div class="custom-option" data-value="Infinite Field (10D)">Infinite Field (10D)</div>
+                                <div class="custom-option" data-value="Full Immersion (16D)">Full Immersion (16D)</div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Live Response — stretches to fill remaining height -->
+                    <div class="freq-panel freq-stats">
+                        <div class="freq-panel-label" style="margin-bottom:6px;">Live Response</div>
+
+                        <div class="freq-active-row">
+                            <span class="freq-active-name" id="activeName">FLAT</span>
+                            <span class="freq-eq-badge off" id="eqBadge">OFF</span>
+                        </div>
+
+                        <!-- Animated spectrum bars -->
+                        <div class="freq-visualiser" id="freqVis"></div>
+
+                        <!-- Band level readouts (first 5 bands) -->
+                        <div class="freq-levels" id="freqLevels"></div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="eq-engine.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+    <script>
+        const bands = ['30Hz', '60Hz', '120Hz', '250Hz', '500Hz', '1k', '2k', '4k', '8k', '16k'];
+        const presets = {
+            'FLAT': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            'ROCK': [5, 4, 2, -1, -2, 1, 3, 5, 6, 6],
+            'POP': [-1, 1, 3, 5, 5, 3, 1, -1, -2, -2],
+            'EDM': [6, 5, 1, -1, 0, 2, 4, 5, 6, 4],
+            'JAZZ': [3, 2, 0, 2, -1, -1, 0, 2, 4, 5],
+            'ACOUSTIC': [4, 3, 1, 0, -1, 0, 1, 3, 4, 3],
+            'BASS BOOST': [8, 6, 4, 1, 0, 0, 0, 0, 0, 0],
+            'VOCAL': [-2, -1, 0, 3, 6, 6, 3, 1, 0, -1],
+            'SOFT': [3, 1, 0, -1, -2, -1, 1, 2, 3, 4],
+            'PIANO': [2, 1, 0, 2, 4, 3, 2, 4, 5, 3]
+        };
+
+        /* ── Persist EQ state across page navigation ── */
+        const EQ_STORAGE_KEY = 'orpheus_eq_state';
+
+        function saveEQState() {
+            const state = {
+                preset: currentPreset,
+                enabled: eqEnabled,
+                gains: sliderEls.map(s => parseFloat(s.value))
+            };
+            localStorage.setItem(EQ_STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadEQState() {
+            try {
+                const raw = localStorage.getItem(EQ_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
+        let currentPreset = 'FLAT';
+        let eqEnabled = false;
+        const sliderEls = [];
+
+        /* Build sliders */
+        const slidersWrap = document.getElementById('freqSliders');
+        const hzWrap = document.getElementById('freqHzLabels');
+        bands.forEach((band, i) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'freq-slider-wrapper';
+            const inp = document.createElement('input');
+            inp.type = 'range'; inp.min = '-20'; inp.max = '20'; inp.value = '0';
+            inp.className = 'freq-slider'; inp.id = 'sl' + i;
+            inp.disabled = true;
+            inp.setAttribute('orient', 'vertical');
+            inp.addEventListener('input', () => { currentPreset = 'CUSTOM'; refresh(); saveEQState(); });
+            wrap.appendChild(inp);
+            slidersWrap.appendChild(wrap);
+            sliderEls.push(inp);
+
+            const lbl = document.createElement('span');
+            lbl.textContent = band;
+            hzWrap.appendChild(lbl);
+        });
+
+        /* Build preset buttons */
+        const presetsGrid = document.getElementById('freqPresets');
+        Object.keys(presets).forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = 'freq-preset-btn';
+            btn.textContent = name;
+            if (name === currentPreset) btn.classList.add('active');
+            btn.addEventListener('click', () => applyPreset(name));
+            presetsGrid.appendChild(btn);
+        });
+
+        function applyPreset(name) {
+            currentPreset = name;
+            sliderEls.forEach((s, i) => { s.value = presets[name][i]; });
+            document.querySelectorAll('.freq-preset-btn').forEach(b => b.classList.toggle('active', b.textContent === name));
+            document.getElementById('activeName').textContent = name;
+            refresh();
+            saveEQState();
+        }
+
+        /* EQ Toggle */
+        const chip = document.getElementById('eqChip');
+        const badge = document.getElementById('eqBadge');
+        document.getElementById('eqToggle').addEventListener('change', function () {
+            eqEnabled = this.checked;
+            sliderEls.forEach(s => { s.disabled = !eqEnabled; });
+            document.querySelector('.freq-sliders-card').classList.toggle('eq-active', eqEnabled);
+            chip.textContent = eqEnabled ? 'EQ on' : 'EQ off';
+            chip.classList.toggle('on', eqEnabled);
+            badge.textContent = eqEnabled ? 'ON' : 'OFF';
+            badge.classList.toggle('off', !eqEnabled);
+            /* ── Bypass/restore all filters in the audio engine ── */
+            if (window.OrpheusEQ) OrpheusEQ.setEnabled(eqEnabled);
+            refresh();
+            saveEQState();
+        });
+
+        /* Reset */
+        document.getElementById('btnReset').addEventListener('click', () => applyPreset(currentPreset));
+
+        /* Spectrum visualiser */
+        const visEl = document.getElementById('freqVis');
+        const visBars = [];
+        bands.forEach(() => {
+            const b = document.createElement('div');
+            b.className = 'freq-vis-bar';
+            visEl.appendChild(b);
+            visBars.push(b);
+        });
+
+        /* Band level rows (first 6 bands) */
+        const levelsEl = document.getElementById('freqLevels');
+        const levelFills = [], levelVals = [];
+        bands.slice(0, 6).forEach((band, i) => {
+            const row = document.createElement('div');
+            row.className = 'freq-level-row';
+            row.innerHTML = `
+                <span class="freq-level-band">${band}</span>
+                <div class="freq-level-track">
+                    <div class="freq-level-fill" id="lf${i}"></div>
+                </div>
+                <span class="freq-level-val" id="lv${i}">0</span>`;
+            levelsEl.appendChild(row);
+            levelFills.push(document.getElementById('lf' + i));
+            levelVals.push(document.getElementById('lv' + i));
+        });
+
+        function refresh() {
+            sliderEls.forEach((s, i) => {
+                const v = parseFloat(s.value);
+                const pct = Math.max(3, ((v + 20) / 40) * 100);
+                /* Vis bar */
+                visBars[i].style.height = pct + '%';
+                const intensity = Math.abs(v) / 20;
+                visBars[i].style.background = eqEnabled
+                    ? `linear-gradient(to top, rgba(255,155,81,${0.4 + intensity * 0.6}), rgba(255,155,81,0.12))`
+                    : 'linear-gradient(to top, rgba(191,201,209,0.25), rgba(191,201,209,0.06))';
+
+                /* Level rows */
+                if (i < 6) {
+                    const pctBar = Math.abs(v) / 20 * 50;
+                    const fill = levelFills[i];
+                    const val = levelVals[i];
+                    if (v >= 0) {
+                        fill.style.left = '50%';
+                        fill.style.width = pctBar + '%';
+                        fill.style.background = 'var(--gold)';
+                    } else {
+                        fill.style.left = (50 - pctBar) + '%';
+                        fill.style.width = pctBar + '%';
+                        fill.style.background = 'rgba(191,201,209,0.45)';
+                    }
+                    val.textContent = (v > 0 ? '+' : '') + v;
+                    val.style.color = v !== 0 ? 'var(--gold)' : 'var(--text-muted)';
+                }
+
+                /* ── Send gain to Web Audio API engine ── */
+                if (window.OrpheusEQ) OrpheusEQ.setGain(i, v);
+            });
+        }
+
+        /* Spatial audio dropdown */
+        document.querySelectorAll('.custom-select-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+                    if (w !== this.parentElement) w.classList.remove('open');
+                });
+                this.parentElement.classList.toggle('open');
+            });
+        });
+        document.querySelectorAll('.custom-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                const w = this.closest('.custom-select-wrapper');
+                w.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                w.querySelector('.custom-select-btn').textContent = this.dataset.value;
+                w.classList.remove('open');
+                /* ── Apply spatial mode to the audio engine ── */
+                if (window.OrpheusEQ) OrpheusEQ.setSpatialMode(this.dataset.value);
+            });
+        });
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-wrapper.open').forEach(w => w.classList.remove('open'));
+        });
+
+        /* ── Test Audio: load a local file and route through the EQ ── */
+        const audioFileInput = document.getElementById('audioFileInput');
+        const testAudio = document.getElementById('testAudio');
+        const audioFileName = document.getElementById('audioFileName');
+
+        audioFileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            audioFileName.textContent = file.name;
+
+            const url = URL.createObjectURL(file);
+            testAudio.src = url;
+            testAudio.style.display = 'block';
+
+            /* Connect to the EQ engine on first user interaction */
+            if (window.OrpheusEQ && !testAudio._eqConnected) {
+                OrpheusEQ.connect(testAudio);
+                testAudio._eqConnected = true;
+            }
+
+            testAudio.play().catch(() => { });
+        });
+
+        /* Resume AudioContext if suspended (browsers auto-suspend) */
+        document.addEventListener('click', () => {
+            if (window.OrpheusEQ) OrpheusEQ.resume();
+        }, { once: true });
+
+        /* Also connect the global Orpheus player audio if it exists */
+        window.addEventListener('orpheus:audioReady', function (e) {
+            if (window.OrpheusEQ && e.detail?.audioEl && !e.detail.audioEl._eqConnected) {
+                OrpheusEQ.connect(e.detail.audioEl);
+                e.detail.audioEl._eqConnected = true;
+            }
+        });
+
+        /* Init — restore saved state or fall back to FLAT */
+        const savedState = loadEQState();
+        if (savedState) {
+            currentPreset = savedState.preset;
+            /* Restore slider positions */
+            sliderEls.forEach((s, i) => {
+                s.value = savedState.gains[i] ?? 0;
+            });
+            /* Restore EQ enabled state */
+            eqEnabled = savedState.enabled;
+            const toggleEl = document.getElementById('eqToggle');
+            toggleEl.checked = eqEnabled;
+            sliderEls.forEach(s => { s.disabled = !eqEnabled; });
+            document.querySelector('.freq-sliders-card').classList.toggle('eq-active', eqEnabled);
+            const chip = document.getElementById('eqChip');
+            chip.textContent = eqEnabled ? 'EQ on' : 'EQ off';
+            chip.classList.toggle('on', eqEnabled);
+            const badge = document.getElementById('eqBadge');
+            badge.textContent = eqEnabled ? 'ON' : 'OFF';
+            badge.classList.toggle('off', !eqEnabled);
+            /* Highlight the active preset button */
+            document.querySelectorAll('.freq-preset-btn').forEach(b => b.classList.toggle('active', b.textContent === currentPreset));
+            document.getElementById('activeName').textContent = currentPreset;
+            if (window.OrpheusEQ) OrpheusEQ.setEnabled(eqEnabled);
+            refresh();
+        } else {
+            applyPreset('FLAT');
+        }
+    </script>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

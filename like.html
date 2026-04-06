@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liked Songs | Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <meta name="description" content="Your liked songs collection on Orpheus.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+    <!-- TOP NAV injected by sidebar.js -->
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <div class="main-layout">
+
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="content">
+
+            <h1 class="welcome-title">LIKED SONGS</h1>
+
+            <!-- Liked Songs Card -->
+            <div class="eq-queue-card" id="likedSongsCard">
+                <div class="eq-row eq-header">
+                    <span class="eq-col-num">#</span>
+                    <span class="eq-col-title">TITLE</span>
+                    <span class="eq-col-artist">ARTIST</span>
+                    <span class="eq-col-dur">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </span>
+                    <span class="eq-col-like"></span>
+                </div>
+
+                <!-- Empty state -->
+                <div class="liked-empty" id="likedEmpty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        style="color: var(--text-muted); margin-bottom: 12px;">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    <p style="color: var(--text-muted); font-family: var(--font-sans); font-size: 0.9rem;">No liked
+                        songs yet</p>
+                </div>
+
+                <!-- Dynamically filled -->
+                <div id="likedSongsBody"></div>
+            </div>
+
+        </main>
+    </div>
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+    <script>
+        /* ══════════════════════════════════════════════
+           SUPABASE CONFIG
+        ══════════════════════════════════════════════ */
+        const _SB_URL = SUPABASE_URL;
+        const _SB_KEY = SUPABASE_KEY;
+
+        /* ══════════════════════════════════════════════
+           LOCALSTORAGE HELPERS
+        ══════════════════════════════════════════════ */
+        function getLikedSongs() {
+            try { return JSON.parse(localStorage.getItem('orpheus_liked_songs')) || []; }
+            catch (e) { return []; }
+        }
+        function saveLikedSongs(songs) {
+            localStorage.setItem('orpheus_liked_songs', JSON.stringify(songs));
+        }
+        function removeLikedSong(title) {
+            saveLikedSongs(getLikedSongs().filter(s => s.title !== title));
+            renderLikedSongs();
+        }
+
+        /* ══════════════════════════════════════════════
+           HYDRATE COVER + AUDIO URLS FROM SUPABASE
+           Songs liked before cover/audio was stored get
+           patched in one batch request by title.
+        ══════════════════════════════════════════════ */
+        async function hydrateSongs(songs) {
+            const missing = songs.filter(s => !s.cover_url || !s.audio_url);
+            if (!missing.length) return songs;
+
+            const titles = missing.map(s => '"' + s.title.replace(/"/g, '\\"') + '"').join(',');
+            try {
+                const res = await fetch(
+                    _SB_URL + '/rest/v1/songs?select=title,cover_url,audio_url,artist,duration_sec&title=in.(' + encodeURIComponent(titles) + ')',
+                    { headers: { 'apikey': _SB_KEY, 'Authorization': 'Bearer ' + _SB_KEY, 'Accept': 'application/json' } }
+                );
+                if (!res.ok) return songs;
+                const rows = await res.json();
+                const map = {};
+                rows.forEach(r => { map[r.title] = r; });
+
+                const fmtSec = sec => {
+                    if (!sec || !isFinite(sec)) return '0:00';
+                    const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+                    return m + ':' + String(s).padStart(2, '0');
+                };
+
+                const updated = songs.map(s => {
+                    const r = map[s.title];
+                    if (!r) return s;
+                    return {
+                        ...s,
+                        cover_url: s.cover_url || r.cover_url || null,
+                        audio_url: s.audio_url || r.audio_url || null,
+                        artist: s.artist || r.artist || 'Unknown',
+                        duration: s.duration || (r.duration_sec ? fmtSec(r.duration_sec) : '0:00'),
+                    };
+                });
+                saveLikedSongs(updated);
+                return updated;
+            } catch (e) {
+                return songs;
+            }
+        }
+
+        /* ══════════════════════════════════════════════
+           NOW-PLAYING TRACKING
+        ══════════════════════════════════════════════ */
+        let nowPlayingTitle = '';
+        window.addEventListener('orpheus-song-change', e => {
+            nowPlayingTitle = e.detail.title;
+            renderLikedSongs();
+        });
+
+        /* ══════════════════════════════════════════════
+           RENDER
+        ══════════════════════════════════════════════ */
+        function renderLikedSongs() {
+            const songs = getLikedSongs();
+            const body = document.getElementById('likedSongsBody');
+            const empty = document.getElementById('likedEmpty');
+
+            if (!songs.length) {
+                empty.style.display = 'flex';
+                body.innerHTML = '';
+                return;
+            }
+
+            empty.style.display = 'none';
+            body.innerHTML = DOMPurify.sanitize(songs.map((song, i) => {
+                const isPlaying = song.title === nowPlayingTitle;
+                const thumbHtml = song.cover_url
+                    ? `<img src="${song.cover_url}" alt=""
+                           style="width:40px;height:40px;object-fit:cover;border-radius:10px;flex-shrink:0;"
+                           onerror="this.parentNode.innerHTML='<div class=eq-thumb style=display:flex;align-items:center;justify-content:center;font-size:16px;>&#9834;</div>'">`
+                    : `<div class="eq-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px;">&#9834;</div>`;
+                return `
+                <div class="eq-row eq-song${isPlaying ? ' now-playing' : ''}" data-idx="${i}" style="cursor:pointer;">
+                    <span class="eq-col-num">
+                        ${isPlaying
+                        ? `<span style="display:flex;align-items:flex-end;gap:2px;height:16px;">
+                                <span style="width:3px;border-radius:2px;background:var(--gold);animation:wave-bounce .8s ease-in-out infinite;height:8px"></span>
+                                <span style="width:3px;border-radius:2px;background:var(--gold);animation:wave-bounce .8s ease-in-out infinite .15s;height:14px"></span>
+                                <span style="width:3px;border-radius:2px;background:var(--gold);animation:wave-bounce .8s ease-in-out infinite .3s;height:10px"></span>
+                                <span style="width:3px;border-radius:2px;background:var(--gold);animation:wave-bounce .8s ease-in-out infinite .45s;height:6px"></span>
+                               </span>`
+                        : `<span>${i + 1}</span>`}
+                    </span>
+                    <div class="eq-col-title" style="display:flex;align-items:center;gap:12px;min-width:0;">
+                        ${thumbHtml}
+                        <span class="eq-song-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${song.title}</span>
+                    </div>
+                    <span class="eq-col-artist"><a class="artist-link" href="playing.html?artist=${encodeURIComponent(song.artist || '')}" title="View ${song.artist || 'Unknown'}" style="color:inherit;text-decoration:none;transition:color .2s;">${song.artist || '—'}</a></span>
+                    <span class="eq-col-dur">${song.duration || '—'}</span>
+                    <button class="eq-like-btn liked" aria-label="Unlike ${song.title.replace(/"/g, '&quot;')}"
+                        data-title="${song.title.replace(/"/g, '&quot;')}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#e63946" stroke="#e63946" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </button>
+                </div>`;
+            }).join(''), {ADD_ATTR: ['onerror', 'style']});
+
+            // Row click → play inline via OrpheusPlayer
+            document.querySelectorAll('#likedSongsBody .eq-row.eq-song').forEach(row => {
+                row.addEventListener('click', function (e) {
+                    if (e.target.closest('.eq-like-btn') || e.target.closest('.artist-link')) return;
+                    const idx = parseInt(this.dataset.idx);
+                    if (window.OrpheusPlayer) {
+                        window.OrpheusPlayer.setSongs(getLikedSongs());
+                        window.OrpheusPlayer.play(idx);
+                    }
+                });
+            });
+
+            // Unlike button
+            document.querySelectorAll('#likedSongsBody .eq-like-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    removeLikedSong(this.dataset.title);
+                });
+            });
+        }
+
+        /* ══════════════════════════════════════════════
+           INIT — hydrate missing data, then render
+        ══════════════════════════════════════════════ */
+        (async () => {
+            let songs = getLikedSongs();
+            if (songs.length) songs = await hydrateSongs(songs);
+            renderLikedSongs();
+        })();
+    </script>
+
+    <style>
+        @keyframes wave-bounce {
+
+            0%,
+            100% {
+                transform: scaleY(0.5);
+            }
+
+            50% {
+                transform: scaleY(1.2);
+            }
+        }
+
+        .eq-row.eq-song.now-playing {
+            background: rgba(255, 155, 81, 0.08);
+        }
+
+        .eq-row.eq-song.now-playing .eq-col-num {
+            color: var(--gold);
+        }
+
+        .eq-row.eq-song.now-playing .eq-song-name {
+            color: var(--gold);
+        }
+
+        .eq-col-artist a.artist-link {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .eq-col-artist a.artist-link:hover {
+            color: var(--gold, #FF9B51);
+            text-decoration: underline;
+        }
+    </style>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

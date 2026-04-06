@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact & About — Orpheus</title>
+    <link rel="icon"
+        href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="legal.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth-guard.js"></script>
+    <style>
+        .content {
+            overflow-y: auto;
+            padding: 0;
+            display: block;
+        }
+
+        .contact-hero {
+            margin-top: 0;
+        }
+
+        /* ── Team card grid ── */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin: 24px 0;
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: border-color 0.25s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(255, 155, 81, 0.07) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .team-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(255, 155, 81, 0.12);
+        }
+
+        .team-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2e4455, var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-serif, 'Orbitron', sans-serif);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            margin: 0 auto 16px;
+            border: 2px solid rgba(255, 155, 81, 0.3);
+            box-shadow: 0 4px 18px rgba(255, 155, 81, 0.2);
+            position: relative;
+        }
+
+        .team-name {
+            font-family: var(--font-serif, 'Orbitron', sans-serif);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+
+        .team-role {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .team-sub {
+            font-size: 0.76rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* ── College card ── */
+        .college-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 14px;
+            padding: 28px 28px 24px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .college-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: rgba(255, 155, 81, 0.1);
+            border: 1px solid rgba(255, 155, 81, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            color: var(--accent);
+        }
+
+        .college-info {
+            flex: 1;
+        }
+
+        .college-name {
+            font-family: var(--font-serif, 'Orbitron', sans-serif);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.03em;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .college-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .college-meta span {
+            display: inline-block;
+            margin-right: 16px;
+        }
+
+        .college-meta i {
+            color: var(--accent);
+            margin-right: 5px;
+        }
+
+        /* ── Contact method cards ── */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .contact-method {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: border-color 0.25s, box-shadow 0.2s;
+        }
+
+        .contact-method:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(255, 155, 81, 0.08);
+        }
+
+        .contact-method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 155, 81, 0.1);
+            border: 1px solid rgba(255, 155, 81, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .contact-method-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-method-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 4px;
+        }
+
+        .contact-method-value {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .contact-method-value a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .contact-method-value a:hover {
+            border-color: var(--accent);
+        }
+
+        /* ── Project badge ── */
+        .project-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 155, 81, 0.1);
+            border: 1px solid rgba(255, 155, 81, 0.3);
+            border-radius: 24px;
+            padding: 6px 16px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.06em;
+            margin-bottom: 20px;
+        }
+
+        .project-badge i {
+            font-size: 0.9rem;
+        }
+
+        /* ── Version info row ── */
+        .version-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0 0;
+            border-top: 1px solid var(--border);
+            margin-top: 16px;
+        }
+
+        .version-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2a9d8f;
+            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(42, 157, 143, 0.06);
+            }
+        }
+
+        .version-text {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .version-text strong {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+
+            .team-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+  <link rel="stylesheet" href="responsive-patch.css">
+</head>
+
+<body>
+    <!--
+      sidebar.js injects the topbar (<nav id="topNav">) automatically at the
+      top of <body>, and injects <aside id="sidebar"> as the first child of
+      .main-layout. No hardcoded <header> or <aside> needed here.
+    -->
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+
+        <div class="content">
+
+            <!-- HERO -->
+            <section class="contact-hero legal-hero">
+                <h1>Contact &amp; About</h1>
+                <p class="effective-date">Orpheus Music &nbsp;·&nbsp; v1.0.0 Web &nbsp;·&nbsp; 2026</p>
+            </section>
+
+            <div class="legal-content">
+
+                <!-- ── ABOUT THE PROJECT ── -->
+                <section class="legal-section">
+                    <h2><span class="section-num"><i class="fa-solid fa-music"></i></span> About Orpheus</h2>
+
+                    <div class="project-badge">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        ACADEMIC PROJECT · BCA 3RD YEAR · 2026
+                    </div>
+
+                    <p>
+                        Orpheus is a personalised digital music streaming platform built as a final-year project for the
+                        Bachelor of Computer Applications programme at <strong>Goswami Ganesh Dutta Sanatan Dharma
+                            College</strong>.
+                        The platform features full song streaming from a live Supabase database, a dynamic music player,
+                        custom playlists, an equaliser, and a polished dark/light UI — all crafted from scratch.
+                    </p>
+                    <p>
+                        The name <em>Orpheus</em> is drawn from Greek mythology — the legendary musician whose music
+                        could move even the stones. We built this as a tribute to that idea: music that moves people.
+                    </p>
+
+                    <div class="college-card">
+                        <div class="college-icon"><i class="fa-solid fa-building-columns"></i></div>
+                        <div class="college-info">
+                            <div class="college-name">Goswami Ganesh Dutta Sanatan Dharma College</div>
+                            <div class="college-meta">
+                                <span><i class="fa-solid fa-book-open"></i>Bachelor of Computer Applications</span>
+                                <span><i class="fa-solid fa-layer-group"></i>3rd Year &nbsp;·&nbsp; 2023–2026</span>
+                                <span><i class="fa-solid fa-location-dot"></i>Chandigarh, India</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── MEET THE TEAM ── -->
+                <section class="legal-section">
+                    <h2><span class="section-num"><i class="fa-solid fa-users"></i></span> Meet the Developers</h2>
+                    <p>Orpheus was designed and developed entirely by two students as their capstone project.</p>
+
+                    <div class="team-grid">
+
+                        <!-- Aditya Surya -->
+                        <div class="team-card">
+                            <div class="team-avatar">AS</div>
+                            <div class="team-name">Aditya Surya</div>
+                        </div>
+
+                        <!-- Sunil Kumar -->
+                        <div class="team-card">
+                            <div class="team-avatar">SK</div>
+                            <div class="team-name">Sunil Kumar</div>
+                        </div>
+
+                    </div>
+
+                    <div class="version-row">
+                        <div class="version-dot"></div>
+                        <div class="version-text">Currently running <strong>Orpheus v1.0.0 Web</strong> — production
+                            build</div>
+                    </div>
+                </section>
+
+                <!-- ── CONTACT US ── -->
+                <section class="legal-section">
+                    <h2><span class="section-num"><i class="fa-solid fa-envelope"></i></span> Get in Touch</h2>
+                    <p>
+                        Got a bug to report, a feature idea, or just want to say hello? We'd love to hear from you.
+                        Reach out through any of the channels below and we'll get back to you as soon as we can.
+                    </p>
+
+                    <div class="contact-grid">
+                        <div class="contact-method">
+                            <div class="contact-method-icon"><i class="fa-solid fa-headset"></i></div>
+                            <div class="contact-method-body">
+                                <div class="contact-method-label">General Support</div>
+                                <div class="contact-method-value">
+                                    <a href="mailto:support@orpheusmusic.in">support@orpheusmusic.in</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-method-icon"><i class="fa-solid fa-bug"></i></div>
+                            <div class="contact-method-body">
+                                <div class="contact-method-label">Bug Reports</div>
+                                <div class="contact-method-value">
+                                    <a href="mailto:bugs@orpheusmusic.in">bugs@orpheusmusic.in</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-method-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                            <div class="contact-method-body">
+                                <div class="contact-method-label">Legal &amp; Billing</div>
+                                <div class="contact-method-value">
+                                    <a href="mailto:legal@orpheusmusic.in">legal@orpheusmusic.in</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="contact-method-icon"><i class="fa-solid fa-flag"></i></div>
+                            <div class="contact-method-body">
+                                <div class="contact-method-label">Grievance Officer</div>
+                                <div class="contact-method-value">
+                                    <a href="mailto:grievance@orpheusmusic.in">grievance@orpheusmusic.in</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <p><strong><i class="fa-regular fa-clock"></i> Response Times</strong></p>
+                        <ul>
+                            <li><strong>Support queries</strong> — typically within 24–48 hours</li>
+                            <li><strong>Bug reports</strong> — acknowledged within 48 hours; fixes released in the next
+                                build</li>
+                            <li><strong>Grievances</strong> — acknowledged within 48 hours, resolved within 30 days as
+                                required by the IT Act 2000</li>
+                        </ul>
+                        <p class="note-text"><i class="fa-solid fa-circle-info"></i> As a student project, response
+                            times may vary during examination periods.</p>
+                    </div>
+                </section>
+
+                <!-- ── TECH STACK ── -->
+                <section class="legal-section">
+                    <h2><span class="section-num"><i class="fa-solid fa-code"></i></span> Built With</h2>
+                    <p>Orpheus is built entirely with vanilla web technologies and a modern BaaS backend — no
+                        frameworks, no shortcuts.</p>
+                    <div class="data-tags">
+                        <span class="tag">HTML5</span>
+                        <span class="tag">CSS3</span>
+                        <span class="tag">Vanilla JS</span>
+                        <span class="tag">Supabase</span>
+                        <span class="tag">PostgreSQL</span>
+                    </div>
+
+                    <div class="security-grid">
+                        <div class="security-card">
+                            <i class="fa-solid fa-database"></i>
+                            <span>Supabase DB</span>
+                        </div>
+                        <div class="security-card">
+                            <i class="fa-solid fa-lock"></i>
+                            <span>Auth Guard</span>
+                        </div>
+                        <div class="security-card">
+                            <i class="fa-solid fa-sliders"></i>
+                            <span>EQ Engine</span>
+                        </div>
+                        <div class="security-card">
+                            <i class="fa-solid fa-moon"></i>
+                            <span>Dark Mode</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FOOTER -->
+                <footer class="legal-footer">
+                    <p>&copy; 2026 Orpheus Media Pvt. Ltd. · A project by Aditya Surya &amp; Sunil Kumar</p>
+                    <div class="footer-links">
+                        <a href="settings.html">Settings</a>
+                        <a href="terms.html">Terms of Use</a>
+                        <a href="privacy.html">Privacy Policy</a>
+                        <a href="mailto:support@orpheusmusic.in">Email Us</a>
+                    </div>
+                </footer>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="sidebar.js"></script>
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

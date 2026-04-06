@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing | Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <meta name="description" content="Your current queue and music player on Orpheus.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── Content area scrolls ── */
+        .content {
+            overflow-y: auto;
+            height: calc(100vh - var(--nav-height));
+            padding: 0;
+            transition: padding-right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* ════════════════════════════════════════
+           PLAYLIST HERO SECTION
+        ════════════════════════════════════════ */
+        .playlist-hero {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+            background: #1a2e3a;
+        }
+
+        /* Blurred backdrop that mirrors the cover image */
+        .playlist-hero-backdrop {
+            position: absolute;
+            inset: 0;
+            background-image: var(--cover-src, none);
+            background-size: cover;
+            background-position: center;
+            filter: blur(28px) brightness(0.35) saturate(1.4);
+            transform: scale(1.08);
+            transition: background-image 0.5s ease;
+        }
+
+        /* Gradient overlay so text is always readable */
+        .playlist-hero-backdrop::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom,
+                    rgba(26, 46, 58, 0.2) 0%,
+                    rgba(26, 46, 58, 0.85) 70%,
+                    rgba(26, 46, 58, 1) 100%);
+        }
+
+        /* Inner row: cover art + metadata */
+        .playlist-hero-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: flex-end;
+            gap: 32px;
+            padding: 40px 36px 32px;
+            width: 100%;
+        }
+
+        /* ── Cover art card ── */
+        .playlist-cover-wrap {
+            position: relative;
+            flex-shrink: 0;
+            width: 190px;
+            height: 190px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .playlist-cover-wrap:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .playlist-cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.35s ease;
+        }
+
+        /* Placeholder shown when no image is set */
+        .playlist-cover-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #2e4455 0%, #1a2e3a 100%);
+            color: rgba(191, 201, 209, 0.35);
+            font-size: 52px;
+            transition: opacity 0.3s;
+        }
+
+        .playlist-cover-placeholder span {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(191, 201, 209, 0.3);
+        }
+
+        /* Upload overlay (hover) */
+        .playlist-cover-upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 46, 58, 0.72);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.22s;
+            backdrop-filter: blur(2px);
+        }
+
+        .playlist-cover-wrap:hover .playlist-cover-upload-overlay {
+            opacity: 1;
+        }
+
+        .playlist-cover-upload-overlay svg {
+            width: 28px;
+            height: 28px;
+            stroke: #fff;
+        }
+
+        .playlist-cover-upload-overlay span {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Hidden real file input */
+        #coverFileInput {
+            display: none;
+        }
+
+        /* ── Metadata beside the cover ── */
+        .playlist-meta {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .playlist-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--gold, #FF9B51);
+            background: rgba(255, 155, 81, 0.12);
+            border: 1px solid rgba(255, 155, 81, 0.25);
+            border-radius: 20px;
+            padding: 4px 12px;
+            width: fit-content;
+        }
+
+        .playlist-type-badge svg {
+            width: 10px;
+            height: 10px;
+            fill: var(--gold, #FF9B51);
+        }
+
+        .playlist-title {
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .playlist-stats {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.8rem;
+            color: rgba(191, 201, 209, 0.55);
+        }
+
+        .playlist-stats .dot {
+            opacity: 0.4;
+        }
+
+        .playlist-stats strong {
+            color: rgba(191, 201, 209, 0.8);
+        }
+
+        /* Action buttons */
+        .playlist-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-play-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gold, #FF9B51);
+            color: #1a2e3a;
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 26px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(255, 155, 81, 0.4);
+            transition: background 0.2s, transform 0.18s, box-shadow 0.2s;
+        }
+
+        .btn-play-all:hover {
+            background: #e8832e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 155, 81, 0.5);
+        }
+
+        .btn-play-all svg {
+            width: 14px;
+            height: 14px;
+            fill: #1a2e3a;
+        }
+
+        .btn-shuffle-hero {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.85);
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 30px;
+            padding: 11px 22px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            transition: background 0.2s, border-color 0.2s, transform 0.18s;
+        }
+
+        .btn-shuffle-hero:hover {
+            background: rgba(255, 155, 81, 0.15);
+            border-color: rgba(255, 155, 81, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .btn-shuffle-hero svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+        }
+
+        .btn-more-hero {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: rgba(191, 201, 209, 0.6);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-more-hero:hover {
+            background: rgba(255, 155, 81, 0.15);
+            color: var(--gold, #FF9B51);
+        }
+
+        .btn-more-hero svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ════════════════════════════════════════
+           SONG LIST SECTION (below hero)
+        ════════════════════════════════════════ */
+        .eq-section {
+            padding: 28px 36px 60px;
+        }
+
+        .eq-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .eq-section-title {
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .eq-song-count {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Revamped song list card ── */
+        .eq-queue-card {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+
+        .eq-row {
+            display: grid;
+            grid-template-columns: 36px 1fr 160px 60px 44px;
+            align-items: center;
+            gap: 12px;
+            padding: 0 16px;
+        }
+
+        .eq-row.eq-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--card-border);
+            background: rgba(191, 201, 209, 0.02);
+        }
+
+        .eq-col-num,
+        .eq-col-title,
+        .eq-col-artist,
+        .eq-col-dur,
+        .eq-col-like {
+            font-family: var(--font-heading, 'Orbitron', sans-serif);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .eq-col-num {
+            text-align: center;
+        }
+
+        .eq-col-like {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Song rows */
+        .eq-row.eq-song {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-radius: 0;
+            border-bottom: 1px solid var(--card-border);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .eq-row.eq-song:last-child {
+            border-bottom: none;
+        }
+
+        .eq-row.eq-song:hover {
+            background: rgba(191, 201, 209, 0.08);
+        }
+
+        .eq-col-num {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .eq-col-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: normal;
+            text-transform: none;
+        }
+
+        .eq-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .eq-song-name {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .eq-col-artist {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: normal;
+            text-transform: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .eq-col-artist a.artist-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+
+        .eq-col-artist a.artist-link:hover {
+            color: var(--gold, #FF9B51);
+            text-decoration: underline;
+        }
+
+        .eq-col-dur {
+            font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            letter-spacing: normal;
+            text-transform: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Like button in song row */
+        .eq-col-like {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .eq-like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, transform 0.15s;
+        }
+
+        .eq-like-btn:hover {
+            color: rgba(255, 155, 81, 0.8);
+            transform: scale(1.15);
+        }
+
+        .eq-like-btn.liked {
+            color: #e63946;
+        }
+
+        .eq-like-btn.liked svg {
+            fill: #e63946;
+        }
+
+        /* ── Active state for shuffle/repeat ── */
+        .eq-ctrl-btn.active {
+            color: var(--gold);
+        }
+
+        .eq-ctrl-btn.active svg {
+            filter: drop-shadow(0 0 4px rgba(255, 155, 81, 0.5));
+        }
+
+        /* ── Now-playing row highlight ── */
+        .eq-row.eq-song.now-playing {
+            background: rgba(255, 155, 81, 0.08);
+            border-bottom-color: rgba(255, 155, 81, 0.1);
+        }
+
+        .eq-row.eq-song.now-playing .eq-col-num {
+            color: var(--gold);
+        }
+
+        .eq-row.eq-song.now-playing .eq-song-name {
+            color: var(--gold);
+        }
+
+        /* Waveform animation for now-playing row */
+        .eq-wave {
+            display: none;
+            align-items: flex-end;
+            gap: 2px;
+            height: 16px;
+        }
+
+        .eq-row.eq-song.now-playing .eq-wave {
+            display: flex;
+        }
+
+        .eq-row.eq-song.now-playing .eq-col-num-text {
+            display: none;
+        }
+
+        .eq-wave-bar {
+            width: 3px;
+            border-radius: 2px;
+            background: var(--gold, #FF9B51);
+            animation: wave-bounce 0.8s ease-in-out infinite;
+        }
+
+        .eq-wave-bar:nth-child(1) {
+            height: 8px;
+            animation-delay: 0s;
+        }
+
+        .eq-wave-bar:nth-child(2) {
+            height: 14px;
+            animation-delay: 0.15s;
+        }
+
+        .eq-wave-bar:nth-child(3) {
+            height: 10px;
+            animation-delay: 0.3s;
+        }
+
+        .eq-wave-bar:nth-child(4) {
+            height: 6px;
+            animation-delay: 0.45s;
+        }
+
+        @keyframes wave-bounce {
+
+            0%,
+            100% {
+                transform: scaleY(0.5);
+            }
+
+            50% {
+                transform: scaleY(1.2);
+            }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .playlist-hero-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                padding: 24px 20px 24px;
+            }
+
+            .playlist-cover-wrap {
+                width: 140px;
+                height: 140px;
+            }
+
+            .eq-section {
+                padding: 16px 12px 48px;
+            }
+
+            .eq-row {
+                grid-template-columns: 28px 1fr 100px 48px 36px;
+            }
+
+            .eq-col-artist {
+                display: none;
+            }
+        }
+
+        /* ── When player panel is open — shrink hero cover & reduce padding ── */
+        body.player-open .playlist-hero-inner {
+            gap: 20px;
+            padding: 28px 24px 24px;
+        }
+
+        body.player-open .playlist-cover-wrap {
+            width: 140px;
+            height: 140px;
+        }
+
+        body.player-open .playlist-title {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+        }
+
+        body.player-open .eq-section {
+            padding: 20px 24px 60px;
+        }
+
+        body.player-open .eq-row {
+            grid-template-columns: 36px 1fr 120px 54px 40px;
+        }
+    </style>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+    <!-- ===== TOP NAVIGATION BAR ===== -->
+    <nav class="top-nav" id="topNav">
+        <a href="home.html" class="nav-left" style="text-decoration:none;">
+            <img src="no bg orpheus 1.svg" alt="Orpheus" class="nav-logo">
+            <span class="nav-brand">ORPHEUS</span>
+        </a>
+
+        <div class="nav-center">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" type="text" placeholder="Search artists, songs, playlists…">
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <span class="user-name" id="userName">Guest</span>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="user-avatar" id="userAvatar">
+                    <img src="" alt="User" id="userAvatarImg" style="display: none;">
+                    <span class="avatar-fallback" id="avatarFallback">G</span>
+                </div>
+                <div class="avatar-dropdown" id="avatarDropdown">
+                    <a href="profile.html" class="dropdown-item" id="dropdownProfile">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span>Profile</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="settings.html" class="dropdown-item" id="dropdownSettings">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="login.html" class="dropdown-item dropdown-logout" id="dropdownLogout">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Log Out</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <div class="main-layout">
+
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="content">
+
+            <!-- ── PLAYLIST HERO ── -->
+            <section class="playlist-hero" id="playlistHero">
+                <div class="playlist-hero-backdrop" id="heroBackdrop"></div>
+
+                <div class="playlist-hero-inner">
+
+                    <!-- Cover Art -->
+                    <div class="playlist-cover-wrap" id="coverWrap" title="Click to change playlist cover">
+                        <!-- Placeholder (shown when no image) -->
+                        <div class="playlist-cover-placeholder" id="coverPlaceholder">
+                            ♫
+                            <span>Add cover</span>
+                        </div>
+                        <!-- Actual image (hidden until uploaded) -->
+                        <img class="playlist-cover-img" id="coverImg" src="" alt="Playlist cover"
+                            style="opacity:0; position:absolute; inset:0;">
+                        <!-- Upload hover overlay -->
+                        <div class="playlist-cover-upload-overlay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <span>Change Cover</span>
+                        </div>
+                        <input type="file" id="coverFileInput" accept="image/*">
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="playlist-meta">
+                        <div class="playlist-type-badge" id="playlistTypeBadge">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 18V5l12-2v13" />
+                                <circle cx="6" cy="18" r="3" />
+                                <circle cx="18" cy="16" r="3" />
+                            </svg>
+                            PLAYLIST
+                        </div>
+                        <div class="playlist-title" id="playlistTitle">My Playlist</div>
+                        <div class="playlist-stats">
+                            <strong id="statSongs">35 songs</strong>
+                            <span class="dot">·</span>
+                            <span id="statDuration">~2 hr 5 min</span>
+                        </div>
+                        <div class="playlist-actions">
+                            <button class="btn-play-all" id="btnPlayAll">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                                PLAY ALL
+                            </button>
+                            <button class="btn-shuffle-hero" id="btnShuffleHero">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polyline points="16 3 21 3 21 8" />
+                                    <line x1="4" y1="20" x2="21" y2="3" />
+                                    <polyline points="21 16 21 21 16 21" />
+                                    <line x1="15" y1="15" x2="21" y2="21" />
+                                    <line x1="4" y1="4" x2="9" y2="9" />
+                                </svg>
+                                SHUFFLE
+                            </button>
+                            <button class="btn-more-hero" title="More options">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="5" r="1" />
+                                    <circle cx="12" cy="12" r="1" />
+                                    <circle cx="12" cy="19" r="1" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── SONG LIST ── -->
+            <section class="eq-section">
+                <div class="eq-section-header">
+                    <span class="eq-section-title">Tracks</span>
+                    <span class="eq-song-count" id="songCountLabel"></span>
+                </div>
+
+                <div class="eq-queue-card">
+                    <!-- Table header -->
+                    <div class="eq-row eq-header">
+                        <span class="eq-col-num">#</span>
+                        <span class="eq-col-title">TITLE</span>
+                        <span class="eq-col-artist">ARTIST</span>
+                        <span class="eq-col-dur">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                        </span>
+                        <span class="eq-col-like"></span>
+                    </div>
+
+                    <!-- Populated by JS -->
+                    <div id="songListBody"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+    <script>
+        /* ══════════════════════════════════════════════════
+           GENRE / ALBUM MODE DETECTION
+           Read ?genre=NAME or ?album=NAME from URL →
+           filter songs from the "songs" DB table.
+        ══════════════════════════════════════════════════ */
+        const _SB_URL = SUPABASE_URL;
+        const _SB_KEY = SUPABASE_KEY;
+
+        const _urlParams = new URLSearchParams(window.location.search);
+        const GENRE_NAME = _urlParams.get('genre');     // e.g. "Hip-Hop"
+        const ALBUM_NAME = _urlParams.get('album');     // e.g. "After Hours"
+        const ARTIST_NAME = _urlParams.get('artist');    // e.g. "Drake"
+        const PLAYLIST_NAME = _urlParams.get('playlist');  // e.g. "Chill Vibes"
+        const GENRE_ICON = GENRE_NAME ? (sessionStorage.getItem('orpheus_genre_icon') || null) : null;
+        const IS_GENRE = !!GENRE_NAME;
+        const IS_ALBUM = !!ALBUM_NAME && !IS_GENRE;
+        const IS_ARTIST = !!ARTIST_NAME && !IS_GENRE && !IS_ALBUM;
+        const IS_PLAYLIST = !!PLAYLIST_NAME && !IS_GENRE && !IS_ALBUM && !IS_ARTIST;
+
+        function fmtTimeSec(sec) {
+            if (!sec || !isFinite(sec)) return '0:00';
+            const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+            return m + ':' + String(s).padStart(2, '0');
+        }
+
+        /* ── Fetch songs from the DB filtered by genre, album, artist, or playlist ── */
+        async function fetchFilteredSongs(filter) {
+            let url = `${_SB_URL}/rest/v1/songs?select=*&order=track_number.asc,title.asc`;
+            if (filter.genre) url += `&genre=eq.${encodeURIComponent(filter.genre)}`;
+            if (filter.album) url += `&album=eq.${encodeURIComponent(filter.album)}`;
+            if (filter.artist) url += `&artist=eq.${encodeURIComponent(filter.artist)}`;
+            if (filter.playlist) url += `&playlist=eq.${encodeURIComponent(filter.playlist)}`;
+
+            const res = await fetch(url, {
+                headers: {
+                    'apikey': _SB_KEY,
+                    'Authorization': `Bearer ${_SB_KEY}`,
+                    'Accept': 'application/json'
+                }
+            });
+            if (!res.ok) throw new Error(`DB fetch failed: ${res.status}`);
+            const rows = await res.json();
+            return rows.map(r => ({
+                id: r.id,
+                title: r.title || 'Untitled',
+                artist: r.artist || 'Unknown Artist',
+                album: r.album || 'Unknown Album',
+                genre: r.genre || '',
+                cover_url: r.cover_url || null,
+                audio_url: r.audio_url || null,
+                duration: r.duration_sec ? fmtTimeSec(r.duration_sec) : '0:00',
+            }));
+        }
+
+        /* ── Fetch songs for a genre from Genre/<name>/songs/ ── */
+        async function fetchGenreSongs(genre) {
+            const songFiles = await listGenreFolder(`${genre}/songs`);
+            const audioFiles = songFiles.filter(f =>
+                f.metadata && f.metadata.size != null &&
+                /\.(mp3|wav|ogg|flac|aac|m4a)$/i.test(f.name)
+            );
+
+            return audioFiles.map(f => {
+                const title = fileToTitle(f.name);
+                // Cover art: same name but .webp inside icons/ sub-folder
+                const coverUrl = genreStorageUrl(`${genre}/icons/${title}.webp`);
+                const audioUrl = genreStorageUrl(`${genre}/songs/${f.name}`);
+                return {
+                    title,
+                    artist: genre,
+                    album: genre,
+                    cover_url: coverUrl,
+                    audio_url: audioUrl,
+                    duration: '0:00'
+                };
+            });
+        }
+
+        /* ══════════════════════════════════════════════════
+           UPDATE HERO for genre mode
+        ══════════════════════════════════════════════════ */
+        if (IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) {
+            // Badge → GENRE, ALBUM, ARTIST, or PLAYLIST
+            const badge = document.getElementById('playlistTypeBadge');
+            if (badge) {
+                if (IS_GENRE) {
+                    badge.innerHTML = `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--gold,#FF9B51)">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg> GENRE`;
+                } else if (IS_ALBUM) {
+                    badge.innerHTML = `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--gold,#FF9B51)">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/>
+                    </svg> ALBUM`;
+                } else if (IS_PLAYLIST) {
+                    badge.innerHTML = `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--gold,#FF9B51)">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                        <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg> PLAYLIST`;
+                } else {
+                    badge.innerHTML = `<svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--gold,#FF9B51)">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg> ARTIST`;
+                }
+            }
+
+            // Title → genre, album, artist, or playlist name
+            const titleEl = document.getElementById('playlistTitle');
+            if (titleEl) titleEl.textContent = IS_GENRE ? GENRE_NAME : IS_ALBUM ? ALBUM_NAME : IS_PLAYLIST ? PLAYLIST_NAME : ARTIST_NAME;
+
+            // Cover → genre icon or album cover (disable upload in genre/album/artist/playlist modes)
+            const coverWrap = document.getElementById('coverWrap');
+            if (coverWrap) {
+                coverWrap.style.cursor = 'default';
+                coverWrap.title = (IS_GENRE ? GENRE_NAME : IS_ALBUM ? ALBUM_NAME : IS_PLAYLIST ? PLAYLIST_NAME : ARTIST_NAME)
+                    + (IS_GENRE ? ' genre' : IS_ALBUM ? ' album' : IS_PLAYLIST ? ' playlist' : ' artist');
+                // Remove the upload overlay visually
+                const overlay = coverWrap.querySelector('.playlist-cover-upload-overlay');
+                if (overlay) overlay.style.display = 'none';
+                // Remove file input click through
+                coverWrap.onclick = null;
+                coverWrap.addEventListener('click', e => e.preventDefault(), true);
+            }
+
+            if (GENRE_ICON) {
+                const coverImg = document.getElementById('coverImg');
+                const coverPlaceholder = document.getElementById('coverPlaceholder');
+                const heroBackdrop = document.getElementById('heroBackdrop');
+
+                if (coverImg) {
+                    coverImg.src = GENRE_ICON;
+                    coverImg.style.opacity = '1';
+                    coverImg.style.position = 'relative';
+                    coverImg.style.inset = 'unset';
+                    coverImg.style.width = '100%';
+                    coverImg.style.height = '100%';
+                    coverImg.style.objectFit = 'cover';
+                    coverImg.style.display = 'block';
+                }
+                if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+                if (heroBackdrop) heroBackdrop.style.backgroundImage = `url('${GENRE_ICON}')`;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════
+           SONG CATALOGUE + RENDER
+        ══════════════════════════════════════════════════ */
+        let queueSongs = [];
+        let nowPlayingTitle = '';
+        let _genreSongsReady = !(IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST); // songs come from DB in these modes
+
+        // ── Stats display ──
+        function updateStats() {
+            const total = queueSongs.reduce((acc, s) => {
+                const parts = (s.duration || '0:00').split(':').map(Number);
+                return acc + (parts[0] * 60 + (parts[1] || 0));
+            }, 0);
+            const hrs = Math.floor(total / 3600);
+            const mins = Math.floor((total % 3600) / 60);
+            const durStr = hrs > 0 ? `${hrs} hr ${mins} min` : mins > 0 ? `${mins} min` : '—';
+            const statSongs = document.getElementById('statSongs');
+            const statDur = document.getElementById('statDuration');
+            const songCount = document.getElementById('songCountLabel');
+            if (statSongs) statSongs.textContent = `${queueSongs.length} songs`;
+            if (statDur) statDur.textContent = `about ${durStr}`;
+            if (songCount) songCount.textContent = `${queueSongs.length} tracks`;
+        }
+
+        // ── Now-playing sync ──
+        window.addEventListener('orpheus-song-change', (e) => {
+            nowPlayingTitle = e.detail.title;
+            renderSongList();
+        });
+
+        // ── Songs loaded event from player.js ──
+        window.addEventListener('orpheus:songsLoaded', (e) => {
+            // In genre/album/artist/playlist mode we ignore default songs and wait for DB fetch
+            if (IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) return;
+            queueSongs = e.detail.songs;
+            updateStats();
+            renderSongList();
+        });
+
+        // ── Fallback: songs already loaded before this page's listener fired ──
+        if (!(IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) && window.OrpheusPlayer) {
+            window.OrpheusPlayer.getSongs(songs => {
+                if (songs.length && !queueSongs.length) {
+                    queueSongs = songs;
+                    updateStats();
+                    renderSongList();
+                }
+            });
+        }
+
+        // ── Genre / Album / Artist / Playlist mode: load songs from DB ──
+        if (IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) {
+            const filterLabel = IS_GENRE ? GENRE_NAME : IS_ALBUM ? ALBUM_NAME : IS_PLAYLIST ? PLAYLIST_NAME : ARTIST_NAME;
+            const filter = IS_GENRE ? { genre: GENRE_NAME }
+                : IS_ALBUM ? { album: ALBUM_NAME }
+                    : IS_PLAYLIST ? { playlist: PLAYLIST_NAME }
+                        : { artist: ARTIST_NAME };
+            fetchFilteredSongs(filter).then(songs => {
+                queueSongs = songs;
+                _genreSongsReady = true;
+                updateStats();
+                renderSongList();
+                // Don't auto-push filtered songs into the player queue —
+                // this would overwrite whatever is currently playing.
+                // The queue is only updated when the user explicitly clicks
+                // Play All, Shuffle, or a specific song row.
+
+                // ── Album mode: set cover from first song's cover_url ──
+                if (IS_ALBUM && songs.length) {
+                    const firstCover = songs.find(s => s.cover_url)?.cover_url;
+                    if (firstCover) {
+                        const coverImg = document.getElementById('coverImg');
+                        const coverPlaceholder = document.getElementById('coverPlaceholder');
+                        const heroBackdrop = document.getElementById('heroBackdrop');
+                        if (coverImg) {
+                            coverImg.src = firstCover;
+                            coverImg.style.opacity = '1';
+                            coverImg.style.position = 'relative';
+                            coverImg.style.inset = 'unset';
+                            coverImg.style.width = '100%';
+                            coverImg.style.height = '100%';
+                            coverImg.style.objectFit = 'cover';
+                            coverImg.style.display = 'block';
+                        }
+                        if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+                        if (heroBackdrop) heroBackdrop.style.backgroundImage = `url('${firstCover}')`;
+                    }
+                }
+
+                // ── Artist mode: set cover from first song's cover_url ──
+                if (IS_ARTIST && songs.length) {
+                    const firstCover = songs.find(s => s.cover_url)?.cover_url;
+                    if (firstCover) {
+                        const coverImg = document.getElementById('coverImg');
+                        const coverPlaceholder = document.getElementById('coverPlaceholder');
+                        const heroBackdrop = document.getElementById('heroBackdrop');
+                        if (coverImg) {
+                            coverImg.src = firstCover;
+                            coverImg.style.opacity = '1';
+                            coverImg.style.position = 'relative';
+                            coverImg.style.inset = 'unset';
+                            coverImg.style.width = '100%';
+                            coverImg.style.height = '100%';
+                            coverImg.style.objectFit = 'cover';
+                            coverImg.style.display = 'block';
+                        }
+                        if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+                        if (heroBackdrop) heroBackdrop.style.backgroundImage = `url('${firstCover}')`;
+                    }
+                }
+
+                // ── Playlist mode: set cover from playlists_icons table ──
+                if (IS_PLAYLIST) {
+                    fetch(
+                        `${_SB_URL}/rest/v1/playlists_icons?select=name,cover_url&name=eq.${encodeURIComponent(PLAYLIST_NAME)}`,
+                        { headers: { 'apikey': _SB_KEY, 'Authorization': `Bearer ${_SB_KEY}`, 'Accept': 'application/json' } }
+                    ).then(r => r.json()).then(iconRows => {
+                        const coverUrl = (iconRows && iconRows[0] && iconRows[0].cover_url) || null;
+                        if (coverUrl) {
+                            const coverImg = document.getElementById('coverImg');
+                            const coverPlaceholder = document.getElementById('coverPlaceholder');
+                            const heroBackdrop = document.getElementById('heroBackdrop');
+                            if (coverImg) {
+                                coverImg.src = coverUrl;
+                                coverImg.style.opacity = '1';
+                                coverImg.style.position = 'relative';
+                                coverImg.style.inset = 'unset';
+                                coverImg.style.width = '100%';
+                                coverImg.style.height = '100%';
+                                coverImg.style.objectFit = 'cover';
+                                coverImg.style.display = 'block';
+                            }
+                            if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+                            if (heroBackdrop) heroBackdrop.style.backgroundImage = `url('${coverUrl}')`;
+                        }
+                    }).catch(() => { /* no cover, keep placeholder */ });
+                }
+            }).catch(err => {
+                console.error('Failed to load songs:', err);
+                const body = document.getElementById('songListBody');
+                if (body) body.innerHTML = `<div style="padding:40px;text-align:center;
+                    color:rgba(191,201,209,.4);font-size:.85rem;">
+                    Could not load songs for <strong>${filterLabel}</strong>.</div>`;
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           LIKED SONGS
+        ═══════════════════════════════════════════ */
+        function getLikedSongs() {
+            try { return JSON.parse(localStorage.getItem('orpheus_liked_songs')) || []; }
+            catch { return []; }
+        }
+        function saveLikedSongs(songs) { localStorage.setItem('orpheus_liked_songs', JSON.stringify(songs)); }
+        function isLiked(title) { return getLikedSongs().some(s => s.title === title); }
+        function toggleLike(title, artist, duration, btn, coverUrl) {
+            let songs = getLikedSongs();
+            const idx = songs.findIndex(s => s.title === title);
+            if (idx >= 0) { songs.splice(idx, 1); btn.classList.remove('liked'); }
+            else { songs.push({ title, artist, duration, cover_url: coverUrl || null }); btn.classList.add('liked'); }
+            saveLikedSongs(songs);
+        }
+
+        /* ═══════════════════════════════════════════
+           RENDER SONG LIST
+        ═══════════════════════════════════════════ */
+        const songListBody = document.getElementById('songListBody');
+
+        function renderSongList() {
+            if (!_genreSongsReady || !queueSongs.length) {
+                songListBody.innerHTML = `<div style="padding:40px;text-align:center;
+                    color:rgba(191,201,209,.4);font-size:.85rem;">
+                    ${(IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) ? 'Loading songs for <strong>' + (GENRE_NAME || ALBUM_NAME || ARTIST_NAME || PLAYLIST_NAME) + '</strong>…' : 'Loading your songs from storage…'}</div>`;
+                return;
+            }
+            songListBody.innerHTML = DOMPurify.sanitize(queueSongs.map((song, i) => {
+                const playing = song.title === nowPlayingTitle;
+                const thumb = song.cover_url
+                    ? `<img src="${song.cover_url}" alt="" style="width:32px;height:32px;object-fit:cover;border-radius:4px"
+                          onerror="this.style.display='none'">`
+                    : `<div class="eq-thumb">♪</div>`;
+                return `
+                <div class="eq-row eq-song${playing ? ' now-playing' : ''}" data-idx="${i}" id="song${i + 1}">
+                    <span class="eq-col-num">
+                        <span class="eq-col-num-text">${i + 1}</span>
+                        <div class="eq-wave">
+                            <div class="eq-wave-bar"></div>
+                            <div class="eq-wave-bar"></div>
+                            <div class="eq-wave-bar"></div>
+                            <div class="eq-wave-bar"></div>
+                        </div>
+                    </span>
+                    <div class="eq-col-title">
+                        ${thumb}
+                        <span class="eq-song-name">${song.title}</span>
+                    </div>
+                    <span class="eq-col-artist"><a class="artist-link" href="playing.html?artist=${encodeURIComponent(song.artist)}" title="View ${song.artist}">${song.artist}</a></span>
+                    <span class="eq-col-dur">${song.duration || '—'}</span>
+                    <span class="eq-col-like">
+                        <button class="eq-like-btn${isLiked(song.title) ? ' liked' : ''}"
+                            data-title="${song.title}" data-artist="${song.artist}" data-dur="${song.duration || ''}" data-cover="${song.cover_url || ''}"
+                            aria-label="Like ${song.title}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </button>
+                    </span>
+                </div>`;
+            }).join(''), {ADD_ATTR: ['onerror', 'style']});
+
+            bindLikeButtons();
+            bindRowClicks();
+        }
+
+        function bindLikeButtons() {
+            document.querySelectorAll('#songListBody .eq-like-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    toggleLike(this.dataset.title, this.dataset.artist, this.dataset.dur, this, this.dataset.cover);
+                });
+            });
+        }
+
+        function bindRowClicks() {
+            document.querySelectorAll('#songListBody .eq-row.eq-song').forEach(row => {
+                row.addEventListener('click', function (e) {
+                    if (e.target.closest('.eq-like-btn') || e.target.closest('.artist-link')) return;
+                    const idx = parseInt(this.dataset.idx);
+                    if (window.OrpheusPlayer) {
+                        // In genre mode player.js may have overwritten SONGS with album songs
+                        // after its own loadSongsFromStorage() finished — re-assert genre songs
+                        if ((IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) && queueSongs.length) {
+                            window.OrpheusPlayer.setSongs(queueSongs);
+                        }
+                        window.OrpheusPlayer.play(idx);
+                    }
+                });
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           HERO ACTIONS
+        ═══════════════════════════════════════════ */
+        document.getElementById('btnPlayAll').addEventListener('click', () => {
+            if (window.OrpheusPlayer) {
+                if ((IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) && queueSongs.length) window.OrpheusPlayer.setSongs(queueSongs);
+                window.OrpheusPlayer.play(0);
+            }
+        });
+        document.getElementById('btnShuffleHero').addEventListener('click', () => {
+            if (window.OrpheusPlayer) {
+                if ((IS_GENRE || IS_ALBUM || IS_ARTIST || IS_PLAYLIST) && queueSongs.length) window.OrpheusPlayer.setSongs(queueSongs);
+                window.OrpheusPlayer.playRandom();
+            }
+        });
+
+        /* ═══════════════════════════════════════════
+           COVER IMAGE UPLOAD (album mode only)
+        ═══════════════════════════════════════════ */
+        if (!IS_GENRE && !IS_ARTIST && !IS_PLAYLIST) {
+            const coverWrap = document.getElementById('coverWrap');
+            const coverFileInput = document.getElementById('coverFileInput');
+            const coverImg = document.getElementById('coverImg');
+            const coverPlaceholder = document.getElementById('coverPlaceholder');
+            const heroBackdrop = document.getElementById('heroBackdrop');
+
+            coverWrap.addEventListener('click', () => coverFileInput.click());
+            coverFileInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    const src = ev.target.result;
+                    coverImg.src = src;
+                    coverImg.style.opacity = '1';
+                    coverImg.style.position = 'relative';
+                    coverPlaceholder.style.display = 'none';
+                    heroBackdrop.style.backgroundImage = `url('${src}')`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           INIT — show loading state until songs arrive
+        ═══════════════════════════════════════════ */
+        renderSongList();
+        updateStats();
+    </script>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORPHEUS — Login</title>
+  <link rel="icon" type="image/svg+xml"
+    href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    /* ── Page Entrance Transition ── */
+    .pt-ent-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .pt-ent-left,
+    .pt-ent-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 52%;
+      will-change: transform;
+      transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+
+    .pt-ent-left {
+      left: 0;
+      transform: translateX(0);
+      background: linear-gradient(160deg, #0d1b2a 0%, #162536 100%);
+    }
+
+    .pt-ent-right {
+      right: 0;
+      transform: translateX(0);
+      background: linear-gradient(200deg, #162536 0%, #0d1b2a 100%);
+    }
+
+    .pt-ent-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.35s ease 0.55s;
+    }
+
+    .pt-ent-logo-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      animation: pt-ent-pulse 1.6s ease-in-out infinite;
+    }
+
+    .pt-ent-brand {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #fff;
+      opacity: 0.9;
+    }
+
+    .pt-ent-brand span {
+      color: #4fc3f7;
+    }
+
+    @keyframes pt-ent-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.3);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 12px rgba(79, 195, 247, 0);
+      }
+    }
+
+    /* Reveal — panels fly off screen */
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-left {
+      transform: translateX(-102%);
+    }
+
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-right {
+      transform: translateX(102%);
+    }
+
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-center {
+      opacity: 0;
+    }
+
+    /* Gone — remove from layout */
+    .pt-ent-wrap.pt-ent-done {
+      display: none;
+    }
+  </style>
+  <!-- Supabase -->
+  <!-- Supabase via CDN (more reliable than local node_modules) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+</head>
+
+<body>
+
+  <div class="auth-page">
+
+    <!-- ══ LEFT DECORATIVE PANEL ══ -->
+    <aside class="auth-panel">
+      <div class="panel-edge"></div>
+
+      <!-- Brand -->
+      <div class="panel-logo">
+        <div class="panel-logo-circle">
+          <img
+            src="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg"
+            alt="Orpheus" class="panel-logo-img">
+        </div>
+        <div class="panel-logo-text">ORPHEUS<span class="panel-logo-dot">•</span></div>
+      </div>
+
+      <!-- Hero copy -->
+      <div class="panel-art">
+        <div class="panel-headline">Your music.<br><em>Your world.</em><br>All in one place.</div>
+        <p class="panel-tagline">A personal music platform — stream your curated library, explore regional charts, and
+          get deep insights into your listening habits.</p>
+        <div class="panel-features">
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Curated library</strong> across every genre you love</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Trending charts</strong> from India &amp; around the world</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Studio Equalizer</strong> — tune your listening experience</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Echo Analytics</strong> — visualise your music patterns</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats (live from DB, like home page) -->
+      <div class="panel-stats">
+        <div class="p-stat"><span class="p-stat-num" id="statTracks">—</span><span class="p-stat-lbl">Tracks</span>
+        </div>
+        <div class="p-stat"><span class="p-stat-num" id="statArtists">—</span><span class="p-stat-lbl">Artists</span>
+        </div>
+        <div class="p-stat"><span class="p-stat-num" id="statAlbums">—</span><span class="p-stat-lbl">Albums</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══ RIGHT FORM PANEL ══ -->
+    <div class="auth-form-side">
+      <div class="auth-box">
+
+        <div class="auth-header">
+          <a href="home.html" class="auth-back">← Back to Home</a>
+          <h1 class="auth-title">Welcome Back</h1>
+          <p class="auth-subtitle">Sign in to continue your musical journey.</p>
+        </div>
+
+        <form class="auth-form" id="loginForm" novalidate onsubmit="handleLogin(event)">
+
+          <div class="field-group" id="fg-identifier">
+            <label class="field-label" for="identifier">Email or Username<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">✉</span>
+              <input class="field-input has-icon" id="identifier" type="text"
+                placeholder="you@example.com or your username" autocomplete="username">
+            </div>
+            <span class="field-error">Please enter your email or username.</span>
+          </div>
+
+          <div class="field-group" id="fg-loginPwd">
+            <label class="field-label" for="loginPwd">Password<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">🔒</span>
+              <input class="field-input has-icon" id="loginPwd" type="password" placeholder="Enter your password"
+                autocomplete="current-password">
+              <button class="pwd-toggle" type="button" onclick="togglePwd('loginPwd',this)"
+                aria-label="Show/hide password">👁</button>
+            </div>
+            <span class="field-error">Please enter your password.</span>
+          </div>
+
+          <div class="forgot-link">
+            <a onclick="openForgot();return false;" href="#">Forgot password?</a>
+          </div>
+
+          <button class="auth-submit" type="submit" id="loginBtn">
+            <span>SIGN IN</span><span>→</span>
+          </button>
+
+        </form>
+
+        <div class="auth-or"><span>OR CONTINUE WITH</span></div>
+        <div class="social-row">
+          <button class="social-btn" onclick="socialLogin('Google')">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4" />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853" />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05" />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335" />
+            </svg>
+            Google
+          </button>
+          <button class="social-btn" onclick="socialLogin('Apple')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+            </svg>
+            Apple
+          </button>
+        </div>
+
+        <p class="auth-footer">Don't have an account? <a href="signup.html">Create one →</a></p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FORGOT PASSWORD MODAL ══ -->
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-box">
+      <div class="modal-box-inner">
+        <button class="modal-close" onclick="closeForgot()">✕</button>
+
+        <div id="forgotFormWrap">
+          <div class="modal-icon">🔑</div>
+          <div class="modal-title">Reset Password</div>
+          <p class="modal-subtitle">Enter the email linked to your account and we'll send you a reset link.</p>
+          <div class="field-group" id="fg-resetEmail">
+            <label class="field-label" for="resetEmail">Email Address<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">✉</span>
+              <input class="field-input has-icon" id="resetEmail" type="email" placeholder="you@example.com">
+            </div>
+            <span class="field-error">Please enter a valid email address.</span>
+          </div>
+          <button class="auth-submit" id="resetBtn" onclick="submitReset()" style="margin-top:4px">
+            <span>SEND RESET LINK</span><span>→</span>
+          </button>
+          <p style="text-align:center;font-size:12px;color:var(--dark-fade);margin-top:-8px">
+            Remembered it? <a href="#" onclick="closeForgot();return false;"
+              style="color:var(--c-accent);font-weight:700;text-decoration:none">Back to Sign In</a>
+          </p>
+        </div>
+
+        <div class="modal-success" id="forgotSuccess">
+          <div class="modal-success-icon">📬</div>
+          <div class="modal-success-title">Check Your Inbox!</div>
+          <p class="modal-success-msg">We sent a reset link to <strong id="sentToEmail"></strong>. Check your spam
+            folder if it doesn't arrive in a few minutes.</p>
+          <button class="auth-submit" onclick="closeForgot()" style="margin-top:24px;width:100%">
+            <span>DONE</span><span>✓</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ OTP VERIFICATION MODAL ══ -->
+  <div class="otp-overlay" id="otpModal">
+    <div class="otp-box">
+      <button class="otp-close" onclick="closeOtp()" aria-label="Close">✕</button>
+
+      <!-- Verify form -->
+      <div id="otpFormWrap">
+        <div class="otp-icon">📧</div>
+        <div class="otp-title">Verify Your Email</div>
+        <p class="otp-subtitle">We sent a 6-digit code to<br><strong id="otpEmailDisplay"></strong></p>
+
+        <div class="otp-inputs" id="otpInputs">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <div class="otp-error-msg" id="otpError"></div>
+
+        <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyOtp()">
+          <span>VERIFY & SIGN IN</span><span>→</span>
+        </button>
+
+        <div class="otp-resend-row">
+          Didn't receive it?&nbsp;
+          <button class="otp-resend-btn" id="otpResendBtn" onclick="resendOtp()" disabled>
+            Resend in <span class="otp-timer" id="otpTimerDisplay">30s</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Success state -->
+      <div class="otp-success-wrap" id="otpSuccess">
+        <div class="otp-success-icon">✅</div>
+        <div class="otp-success-title">Verified!</div>
+        <p class="otp-success-msg">Identity confirmed. Signing you in…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOAST ══ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══ PAGE ENTRANCE ══ -->
+  <div class="pt-ent-wrap" id="ptEntrance">
+    <div class="pt-ent-left"></div>
+    <div class="pt-ent-right"></div>
+    <div class="pt-ent-center">
+      <div class="pt-ent-logo-ring">
+        <img src="no bg orpheus.png" alt="Orpheus" style="width:64px;height:64px;object-fit:contain;">
+      </div>
+      <div class="pt-ent-brand">ORPHEUS<span>•</span></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE TRANSITION ══ -->
+  <div class="pt-overlay" id="ptOverlay">
+    <div class="pt-panel pt-left"></div>
+    <div class="pt-panel pt-right"></div>
+    <div class="pt-center">
+      <div class="pt-logo-ring">
+        <span class="pt-logo-emoji"><img src="no bg orpheus.png" alt="Orpheus"
+            style="width:72px;height:72px;object-fit:contain;display:block;"></span>
+        <svg class="pt-ring-svg" viewBox="0 0 120 120">
+          <circle class="pt-ring-track" cx="60" cy="60" r="54" />
+          <circle class="pt-ring-progress" cx="60" cy="60" r="54" />
+        </svg>
+      </div>
+      <div class="pt-wordmark">ORPHEUS<span>•</span></div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Page Entrance ── */
+    (function () {
+      const ent = document.getElementById('ptEntrance');
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            ent.classList.add('pt-ent-reveal');
+            setTimeout(function () { ent.classList.add('pt-ent-done'); }, 1150);
+          });
+        });
+      });
+    })();
+
+    /* ── Utilities ── */
+    function togglePwd(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
+
+    function vf(groupId, inputId, rule) {
+      const fg = document.getElementById(groupId);
+      const val = document.getElementById(inputId).value.trim();
+      const ok = rule(val);
+      fg.classList.toggle('has-error', !ok);
+      fg.classList.toggle('valid', ok);
+      return ok;
+    }
+
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function navigateTo(url) {
+      const ov = document.getElementById('ptOverlay');
+      ov.classList.add('pt-entering');
+      setTimeout(() => ov.classList.add('pt-show-content'), 380);
+      setTimeout(() => { window.location.href = url; }, 1100);
+    }
+
+    /* ── OTP State ── */
+    let _otpCode = '';
+    let _otpUser = '';
+    let _otpTimerInterval = null;
+
+    /* generateOtp removed — real Supabase email OTP used instead (TC-F20, TC-S02, TC-S03) */
+
+    /* ── Login → Supabase Auth ── */
+    async function handleLogin(e) {
+      e.preventDefault();
+      const v1 = vf('fg-identifier', 'identifier', v => v.length > 2);
+      const v2 = vf('fg-loginPwd', 'loginPwd', v => v.length > 0);
+      if (!v1 || !v2) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span>SIGNING IN…</span>';
+
+      const identifier = document.getElementById('identifier').value.trim();
+      const password = document.getElementById('loginPwd').value;
+
+      // Determine if identifier is email or username
+      const isEmail = identifier.includes('@');
+      let emailToUse = identifier;
+
+      try {
+        // If username entered, look up email first
+        if (!isEmail) {
+          const { data: profile, error: lookupErr } = await supabaseClient
+            .from('profiles')
+            .select('email')
+            .eq('username', identifier)
+            .single();
+
+          if (lookupErr || !profile) {
+            showToast('Username not found. Try your email instead.', 'error');
+            btn.classList.remove('loading');
+            btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
+            return;
+          }
+          emailToUse = profile.email;
+        }
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: emailToUse,
+          password: password
+        });
+
+        if (error) {
+          let msg = 'Login failed. Check your credentials.';
+
+          if (error.message.includes('Invalid login')) {
+            // Check if the email actually exists in profiles
+            const { data: existingProfile } = await supabaseClient
+              .from('profiles')
+              .select('id')
+              .eq('email', emailToUse)
+              .maybeSingle();
+
+            if (!existingProfile) {
+              msg = 'No account found with this ' + (isEmail ? 'email' : 'username') + '. Please sign up first.';
+            } else {
+              msg = 'Incorrect password. Please try again.';
+            }
+          }
+          if (error.message.includes('Email not confirmed')) msg = 'Please confirm your email first.';
+          showToast(msg, 'error');
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
+          return;
+        }
+
+        // ✅ Auth succeeded — now verify they have a profile in the database
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('username')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (!profile) {
+          // User exists in Supabase Auth but has no profile — not a registered user
+          await supabaseClient.auth.signOut();
+          showToast('No account found. Please create a new account first.', 'error');
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
+          return;
+        }
+
+        const username = profile.username || data.user.user_metadata?.username || data.user.email;
+        sessionStorage.setItem('orpheus_user', username);
+        sessionStorage.setItem('orpheus_uid', data.user.id);
+        showToast('Welcome back, @' + username + '! 🎵', 'success');
+        setTimeout(() => navigateTo('home.html'), 1000);
+
+      } catch (err) {
+        showToast('Something went wrong. Please try again.', 'error');
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
+      }
+    }
+
+    /* ── Social Login — Google OAuth via Supabase ── */
+    // Flag: only handle Google callback if user actually clicked the button
+    async function socialLogin(provider) {
+      if (provider !== 'Google') {
+        showToast(provider + ' login coming soon!', 'info');
+        return;
+      }
+      showToast('Redirecting to Google...', 'info');
+      try {
+        // Redirect back to THIS page after Google login
+        const redirectTo = window.location.href.split('?')[0].split('#')[0];
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo }
+        });
+        if (error) {
+          console.error('Google OAuth error:', error);
+          if (error.message.toLowerCase().includes('provider')) {
+            showToast('Enable Google in Supabase: Auth -> Providers -> Google', 'error');
+          } else {
+            showToast('Google error: ' + error.message, 'error');
+          }
+        }
+        // Browser navigates to Google — nothing below runs
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + (err.message || 'Check F12'), 'error');
+      }
+    }
+
+    // Runs ONLY when returning from Google (?code= in URL)
+    // On normal page load this exits immediately — zero side effects
+    (async function handleGoogleCallback() {
+      const isCallback = window.location.search.includes('code=') ||
+        window.location.hash.includes('access_token');
+      if (!isCallback) return;
+
+      // Wait for Supabase to finish PKCE code exchange
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
+        async (event, session) => {
+          if (event !== 'SIGNED_IN' || !session) return;
+          subscription.unsubscribe(); // fire once only
+
+          // Clean ?code= from URL bar
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          const user = session.user;
+          const meta = user.user_metadata || {};
+
+          // Check if user has a profile in the database
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (!profile) {
+            // Google user has no profile — not a registered user
+            await supabaseClient.auth.signOut();
+            showToast('No account found. Please create a new account first.', 'error');
+            return;
+          }
+
+          const displayName = profile.username || meta.full_name || meta.name || user.email;
+          const username = profile.username || (meta.full_name || meta.name || user.email || 'user')
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '')
+            .slice(0, 24);
+
+          sessionStorage.setItem('orpheus_user', username);
+          sessionStorage.setItem('orpheus_uid', user.id);
+          localStorage.setItem('orpheus_display_name', displayName);
+          localStorage.setItem('orpheus_google_avatar', meta.avatar_url || '');
+
+          showToast('Welcome, ' + displayName + '! Launching ORPHEUS...', 'success');
+          setTimeout(() => navigateTo('home.html'), 900);
+        }
+      );
+    })();
+
+    /* ── Forgot Modal ── */
+    function openForgot() {
+      document.getElementById('forgotFormWrap').style.display = 'block';
+      document.getElementById('forgotSuccess').classList.remove('show');
+      document.getElementById('resetEmail').value = '';
+      const fg = document.getElementById('fg-resetEmail');
+      fg.classList.remove('has-error', 'valid');
+      const btn = document.getElementById('resetBtn');
+      btn.classList.remove('loading');
+      btn.innerHTML = '<span>SEND RESET LINK</span><span>→</span>';
+      document.getElementById('forgotModal').classList.add('open');
+    }
+
+    function closeForgot() {
+      document.getElementById('forgotModal').classList.remove('open');
+    }
+
+    document.getElementById('forgotModal').addEventListener('click', function (e) {
+      if (e.target === this) closeForgot();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeForgot(); closeOtp(); }
+    });
+
+    async function submitReset() {
+      const val = document.getElementById('resetEmail').value.trim();
+      const fg = document.getElementById('fg-resetEmail');
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      fg.classList.toggle('has-error', !ok);
+      fg.classList.toggle('valid', ok);
+      if (!ok) return;
+
+      const btn = document.getElementById('resetBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span>SENDING…</span>';
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(val, {
+        redirectTo: window.location.origin + '/login.html'
+      });
+
+      if (error) {
+        showToast('Could not send reset email: ' + error.message, 'error');
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span>SEND RESET LINK</span><span>→</span>';
+        return;
+      }
+
+      document.getElementById('sentToEmail').textContent = val;
+      document.getElementById('forgotFormWrap').style.display = 'none';
+      document.getElementById('forgotSuccess').classList.add('show');
+    }
+
+    /* ── OTP Modal ── */
+    async function openOtp(identifier) {
+      // Send real OTP via Supabase Auth
+      const isEmail = identifier.includes('@');
+      let emailToSend = identifier;
+
+      if (!isEmail) {
+        // Look up email from username
+        try {
+          const { data: prof } = await supabaseClient
+            .from('profiles')
+            .select('email')
+            .eq('username', identifier)
+            .single();
+          if (prof) emailToSend = prof.email;
+        } catch (_) { }
+      }
+
+      _otpUser = identifier;
+
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email: emailToSend,
+          options: { shouldCreateUser: false }
+        });
+        if (error) {
+          showToast('Could not send verification code: ' + error.message, 'error');
+          return;
+        }
+      } catch (err) {
+        showToast('Could not send verification code: ' + err.message, 'error');
+        return;
+      }
+
+      // Display masked email
+      const display = isEmail
+        ? identifier.replace(/(.{2})[^@]+(@.+)/, '$1••••$2')
+        : '@' + identifier;
+      document.getElementById('otpEmailDisplay').textContent = display;
+
+      // Reset state
+      document.getElementById('otpFormWrap').style.display = 'block';
+      document.getElementById('otpSuccess').classList.remove('show');
+      document.getElementById('otpError').textContent = '';
+      clearOtpInputs();
+
+      document.getElementById('otpModal').classList.add('open');
+      showToast('Verification code sent! Check your inbox 📧', 'success');
+      startOtpTimer();
+
+      setTimeout(() => {
+        document.querySelectorAll('.otp-digit')[0].focus();
+      }, 350);
+    }
+
+    function closeOtp() {
+      document.getElementById('otpModal').classList.remove('open');
+      clearInterval(_otpTimerInterval);
+    }
+
+    function clearOtpInputs() {
+      document.querySelectorAll('.otp-digit').forEach(inp => {
+        inp.value = '';
+        inp.classList.remove('filled', 'shake');
+      });
+    }
+
+    function startOtpTimer(seconds = 30) {
+      const btn = document.getElementById('otpResendBtn');
+      const display = document.getElementById('otpTimerDisplay');
+      btn.disabled = true;
+      btn.innerHTML = 'Resend in <span class="otp-timer" id="otpTimerDisplay">' + seconds + 's</span>';
+      clearInterval(_otpTimerInterval);
+      let remaining = seconds;
+      _otpTimerInterval = setInterval(() => {
+        remaining--;
+        const el = document.getElementById('otpTimerDisplay');
+        if (el) el.textContent = remaining + 's';
+        if (remaining <= 0) {
+          clearInterval(_otpTimerInterval);
+          btn.disabled = false;
+          btn.textContent = 'Resend Code';
+        }
+      }, 1000);
+    }
+
+    async function resendOtp() {
+      // Resend real OTP via Supabase Auth
+      const identifier = _otpUser;
+      const isEmail = identifier.includes('@');
+      let emailToSend = identifier;
+      if (!isEmail) {
+        try {
+          const { data: prof } = await supabaseClient
+            .from('profiles').select('email').eq('username', identifier).single();
+          if (prof) emailToSend = prof.email;
+        } catch (_) { }
+      }
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email: emailToSend,
+          options: { shouldCreateUser: false }
+        });
+        if (error) { showToast('Could not resend code: ' + error.message, 'error'); return; }
+      } catch (err) { showToast('Could not resend code: ' + err.message, 'error'); return; }
+      clearOtpInputs();
+      document.getElementById('otpError').textContent = '';
+      showToast('New code sent! Check your inbox 📧', 'success');
+      startOtpTimer();
+      setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 100);
+    }
+
+    async function verifyOtp() {
+      const digits = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+      const errEl = document.getElementById('otpError');
+
+      if (digits.length < 6) {
+        errEl.textContent = 'Please enter all 6 digits.';
+        shakeOtpInputs();
+        return;
+      }
+
+      // Look up email for verification
+      const identifier = _otpUser;
+      const isEmail = identifier.includes('@');
+      let emailToVerify = identifier;
+      if (!isEmail) {
+        try {
+          const { data: prof } = await supabaseClient
+            .from('profiles').select('email').eq('username', identifier).single();
+          if (prof) emailToVerify = prof.email;
+        } catch (_) { }
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.verifyOtp({
+          email: emailToVerify,
+          token: digits,
+          type: 'email'
+        });
+        if (error) {
+          errEl.textContent = 'Incorrect code. Please try again.';
+          shakeOtpInputs();
+          clearOtpInputs();
+          setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 100);
+          return;
+        }
+
+        // ✅ Verified
+        errEl.textContent = '';
+        clearInterval(_otpTimerInterval);
+        document.getElementById('otpFormWrap').style.display = 'none';
+        document.getElementById('otpSuccess').classList.add('show');
+
+        const username = data.session?.user?.user_metadata?.username || _otpUser;
+        sessionStorage.setItem('orpheus_user', username);
+        if (data.session?.user?.id) sessionStorage.setItem('orpheus_uid', data.session.user.id);
+        showToast('Welcome back, ' + username + '! 🎵', 'success');
+        setTimeout(() => navigateTo('home.html'), 1400);
+      } catch (err) {
+        errEl.textContent = 'Verification failed: ' + err.message;
+        shakeOtpInputs();
+      }
+    }
+
+    function shakeOtpInputs() {
+      document.querySelectorAll('.otp-digit').forEach(inp => {
+        inp.classList.remove('shake');
+        void inp.offsetWidth;
+        inp.classList.add('shake');
+      });
+    }
+
+    /* ── OTP keyboard wiring ── */
+    document.addEventListener('DOMContentLoaded', function () {
+      const digits = document.querySelectorAll('.otp-digit');
+      digits.forEach((inp, idx) => {
+        inp.addEventListener('input', function () {
+          const val = this.value.replace(/\D/g, '');
+          this.value = val ? val[val.length - 1] : '';
+          this.classList.toggle('filled', !!this.value);
+          document.getElementById('otpError').textContent = '';
+          if (this.value && idx < digits.length - 1) digits[idx + 1].focus();
+        });
+
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Backspace' && !this.value && idx > 0) {
+            digits[idx - 1].value = '';
+            digits[idx - 1].classList.remove('filled');
+            digits[idx - 1].focus();
+          }
+          if (e.key === 'ArrowLeft' && idx > 0) digits[idx - 1].focus();
+          if (e.key === 'ArrowRight' && idx < digits.length - 1) digits[idx + 1].focus();
+        });
+
+        inp.addEventListener('paste', function (e) {
+          e.preventDefault();
+          const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+          paste.split('').forEach((ch, i) => {
+            if (digits[i]) { digits[i].value = ch; digits[i].classList.add('filled'); }
+          });
+          if (digits[Math.min(paste.length, digits.length - 1)]) digits[Math.min(paste.length, digits.length - 1)].focus();
+        });
+      });
+    });
+
+    /* ── Live Panel Stats (Tracks / Artists / Albums) ── */
+    (async function loadPanelStats() {
+      const SB_URL = SUPABASE_URL;
+      const SB_KEY = SUPABASE_KEY;
+      const hdrs = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Accept': 'application/json' };
+      try {
+        // Total tracks (use count header)
+        const trackRes = await fetch(`${SB_URL}/rest/v1/songs?select=id`, {
+          headers: { ...hdrs, 'Prefer': 'count=exact', 'Range': '0-0' }
+        });
+        const totalTracks = parseInt(trackRes.headers.get('content-range')?.split('/')[1] || '0', 10);
+
+        // Unique artists + albums
+        const dataRes = await fetch(`${SB_URL}/rest/v1/songs?select=artist,album`, { headers: hdrs });
+        const rows = await dataRes.json();
+        const uniqueArtists = new Set(rows.map(r => r.artist).filter(Boolean)).size;
+        const uniqueAlbums = new Set(rows.map(r => r.album).filter(Boolean)).size;
+
+        function fmtCount(n) {
+          if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+          if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+          return String(n);
+        }
+
+        const el = id => document.getElementById(id);
+        if (el('statTracks')) el('statTracks').textContent = fmtCount(totalTracks);
+        if (el('statArtists')) el('statArtists').textContent = fmtCount(uniqueArtists);
+        if (el('statAlbums')) el('statAlbums').textContent = fmtCount(uniqueAlbums);
+      } catch (err) {
+        console.warn('Panel stats load error:', err);
+      }
+    })();
+
+    /* ── Blur validation ── */
+    document.getElementById('identifier').addEventListener('blur', () => vf('fg-identifier', 'identifier', v => v.length > 2));
+    document.getElementById('loginPwd').addEventListener('blur', () => vf('fg-loginPwd', 'loginPwd', v => v.length > 0));
+  </script>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

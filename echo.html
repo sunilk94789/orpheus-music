@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo - Your Music Wrap | Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <meta name="description" content="Discover your listening habits with Orpheus Echo — your personal music wrap.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="auth-guard.js"></script>
+
+    <style>
+        /* ── Loading & Error States ── */
+        .echo-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 60px 20px;
+            color: var(--text-secondary, #8899aa);
+        }
+
+        .echo-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 155, 81, 0.2);
+            border-top-color: #FF9B51;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .echo-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 60px 20px;
+            color: var(--text-secondary, #8899aa);
+            text-align: center;
+        }
+
+        .echo-error-icon {
+            font-size: 36px;
+        }
+
+        .echo-error-msg {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 280px;
+        }
+
+        .echo-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 60px 20px;
+            color: var(--text-secondary, #8899aa);
+            text-align: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+        }
+
+        /* ── Skeleton shimmer for tracks ── */
+        .track-skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+            height: 14px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* ── Donut segment animation ── */
+        @keyframes fadeSegment {
+            from {
+                opacity: 0;
+                transform-origin: center;
+                transform: scale(0.85);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ── Tooltip on chart hover ── */
+        .donut-tooltip {
+            position: absolute;
+            background: rgba(20, 30, 40, 0.92);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 99;
+        }
+
+        /* ── Chart wrapper needs position relative for tooltip ── */
+        .donut-chart {
+            position: relative;
+        }
+
+        /* ── Stats row below pie ── */
+        .echo-stats-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .echo-stat-pill {
+            background: rgba(255, 155, 81, 0.08);
+            border: 1px solid rgba(255, 155, 81, 0.18);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            color: #FF9B51;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .echo-stat-pill strong {
+            font-weight: 700;
+            color: #fff;
+        }
+    </style>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+    <!-- TOP NAV injected by sidebar.js -->
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <div class="main-layout">
+
+        <!-- ===== LEFT SIDEBAR ===== -->
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- ===== ECHO CONTENT ===== -->
+        <main class="content">
+            <div class="echo-layout">
+
+                <!-- Pie Chart Section -->
+                <div class="echo-chart-area">
+                    <div class="donut-chart" id="donutChart">
+                        <svg viewBox="0 0 200 200" id="donutSvg">
+                            <!-- Segments drawn by JS after DB fetch -->
+                        </svg>
+                        <div class="donut-hole"></div>
+                        <!-- Tooltip -->
+                        <div class="donut-tooltip" id="donutTooltip"></div>
+                    </div>
+
+                    <!-- Stats pills -->
+                    <div class="echo-stats-row" id="echoStatsRow" style="display:none;">
+                        <div class="echo-stat-pill">🎵 Total plays: <strong id="statTotalPlays">—</strong></div>
+                        <div class="echo-stat-pill">🎤 Unique tracks: <strong id="statUniqueTracks">—</strong></div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="chart-legend" id="chartLegend">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Top Tracks Section -->
+                <div class="echo-tracks-area">
+                    <h2 class="echo-tracks-title">YOUR TOP TRACKS</h2>
+                    <div class="echo-tracks-card" id="topTracksCard">
+                        <!-- Loading state -->
+                        <div class="echo-loading" id="tracksLoading">
+                            <div class="echo-spinner"></div>
+                            <span style="font-family:'Space Grotesk',sans-serif;font-size:13px;">Loading your listening
+                                history…</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="donutLoading" class="echo-loading"
+        style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;">
+        <div class="echo-spinner"></div>
+    </div>
+
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+
+    <script>
+        // ============================================================
+        //  ECHO — Supabase-connected listening statistics
+        //  ─────────────────────────────────────────────────────────
+        //  DB Tables used:
+        //    play_history  { id, user_id, song_id, track_id, title, artist, played_at }
+        //    songs         { id, title, artist, audio_url, cover_url, … }
+        //
+        //  Pie chart  → top 5 most-played songs + 1 "All Others" (6 slices)
+        //  Track list → top 10 songs — click any to play instantly
+        // ============================================================
+
+        const PLAY_HISTORY_TABLE = 'play_history';
+        const SONGS_TABLE        = 'songs';
+        const TOP_N_CHART        = 5;   // top songs shown as pie slices (6th = "All Others")
+        const TOP_N_LIST         = 10;  // songs shown in the track list
+
+        // ── Colour palette (6 colours: 5 songs + others) ──────────
+        const CHART_COLORS = [
+            '#FF9B51', // #1 orange
+            '#f06292', // #2 pink
+            '#64b5f6', // #3 blue
+            '#81c784', // #4 green
+            '#ffd54f', // #5 yellow
+            '#3a5268'  // Others — slate
+        ];
+
+        // ── HTML escape helper ────────────────────────────────────
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── Supabase client accessor ──────────────────────────────
+        //  supabase.js creates  window.supabaseClient
+        function getClient() {
+            if (window.supabaseClient) return window.supabaseClient;
+            return null;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  DATA — Fetch play_history, aggregate, enrich with songs
+        // ══════════════════════════════════════════════════════════
+
+        async function fetchTopTracks(userId) {
+            const sb = getClient();
+            if (!sb) throw new Error('Supabase client not found.');
+
+            // 1. Pull every play_history row for the current user
+            const { data: rows, error } = await sb
+                .from(PLAY_HISTORY_TABLE)
+                .select('song_id, track_id, title, artist')
+                .eq('user_id', userId);
+
+            if (error) throw new Error('Could not load play history: ' + error.message);
+            if (!rows || rows.length === 0) return [];
+
+            // 2. Aggregate: count plays per song
+            const map = {};
+            rows.forEach(r => {
+                const key = r.song_id || r.track_id || (r.title + '|||' + r.artist);
+                if (!map[key]) {
+                    map[key] = {
+                        song_id  : r.song_id  || null,
+                        track_id : r.track_id || null,
+                        title    : r.title    || 'Unknown Track',
+                        artist   : r.artist   || 'Unknown Artist',
+                        plays    : 0,
+                        cover_url: null,
+                        audio_url: null,
+                    };
+                }
+                map[key].plays++;
+            });
+
+            // 3. Sort by plays descending
+            const sorted = Object.values(map).sort((a, b) => b.plays - a.plays);
+
+            // 4. Enrich top tracks with cover_url / audio_url from songs table
+            //    (only for the top N_LIST that we actually render)
+            const enrichIds = sorted.slice(0, TOP_N_LIST)
+                .filter(t => t.song_id != null)
+                .map(t => t.song_id);
+
+            if (enrichIds.length > 0) {
+                const { data: songsData } = await sb
+                    .from(SONGS_TABLE)
+                    .select('id, title, artist, cover_url, audio_url')
+                    .in('id', enrichIds);
+
+                if (songsData) {
+                    const songMap = {};
+                    songsData.forEach(s => { songMap[s.id] = s; });
+                    sorted.forEach(t => {
+                        if (t.song_id && songMap[t.song_id]) {
+                            t.cover_url = songMap[t.song_id].cover_url || null;
+                            t.audio_url = songMap[t.song_id].audio_url || null;
+                        }
+                    });
+                }
+            }
+
+            return sorted;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  CHART — Build the 6-segment data  (top 5 + All Others)
+        // ══════════════════════════════════════════════════════════
+
+        function buildChartData(sortedTracks, totalPlays) {
+            const topSlice   = sortedTracks.slice(0, TOP_N_CHART);
+            const topPlays   = topSlice.reduce((s, t) => s + t.plays, 0);
+            const otherPlays = totalPlays - topPlays;
+
+            const segments = topSlice.map((t, i) => ({
+                label   : t.title,
+                artist  : t.artist,
+                plays   : t.plays,
+                percent : +((t.plays / totalPlays) * 100).toFixed(1),
+                color   : CHART_COLORS[i]
+            }));
+
+            if (otherPlays > 0) {
+                segments.push({
+                    label   : 'All Others',
+                    artist  : '',
+                    plays   : otherPlays,
+                    percent : +((otherPlays / totalPlays) * 100).toFixed(1),
+                    color   : CHART_COLORS[5]
+                });
+            }
+
+            // Ensure percentages sum to exactly 100
+            const sum  = segments.reduce((s, sg) => s + sg.percent, 0);
+            const diff = +(100 - sum).toFixed(1);
+            if (segments.length && diff !== 0) {
+                segments[segments.length - 1].percent =
+                    +(segments[segments.length - 1].percent + diff).toFixed(1);
+            }
+
+            return segments;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  DONUT — Draw SVG donut chart
+        // ══════════════════════════════════════════════════════════
+
+        function drawDonut(chartData) {
+            const svg     = document.getElementById('donutSvg');
+            const tooltip = document.getElementById('donutTooltip');
+            svg.innerHTML = '';
+
+            const cx = 100, cy = 100, outerR = 80, innerR = 40;
+            let cumPct = 0;
+            const GAP_DEG = 1.5;
+
+            chartData.forEach((seg, i) => {
+                if (seg.percent <= 0) return;
+
+                const startDeg = cumPct * 3.6 + GAP_DEG / 2;
+                const endDeg   = (cumPct + seg.percent) * 3.6 - GAP_DEG / 2;
+                cumPct += seg.percent;
+
+                const toRad = d => d * Math.PI / 180;
+
+                const x1o = cx + outerR * Math.sin(toRad(startDeg));
+                const y1o = cy - outerR * Math.cos(toRad(startDeg));
+                const x2o = cx + outerR * Math.sin(toRad(endDeg));
+                const y2o = cy - outerR * Math.cos(toRad(endDeg));
+
+                const x1i = cx + innerR * Math.sin(toRad(endDeg));
+                const y1i = cy - innerR * Math.cos(toRad(endDeg));
+                const x2i = cx + innerR * Math.sin(toRad(startDeg));
+                const y2i = cy - innerR * Math.cos(toRad(startDeg));
+
+                const largeArc = (endDeg - startDeg) > 180 ? 1 : 0;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', [
+                    `M ${x1o.toFixed(3)} ${y1o.toFixed(3)}`,
+                    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2o.toFixed(3)} ${y2o.toFixed(3)}`,
+                    `L ${x1i.toFixed(3)} ${y1i.toFixed(3)}`,
+                    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${x2i.toFixed(3)} ${y2i.toFixed(3)}`,
+                    'Z'
+                ].join(' '));
+                path.setAttribute('fill', seg.color);
+                path.setAttribute('class', 'donut-segment');
+                path.style.opacity   = '0';
+                path.style.animation = `fadeSegment 0.5s ease ${i * 0.12}s forwards`;
+                path.style.cursor    = 'pointer';
+                path.style.transition = 'filter 0.2s';
+
+                // Hover glow + tooltip
+                path.addEventListener('mouseenter', () => {
+                    path.style.filter = `drop-shadow(0 0 6px ${seg.color})`;
+                    tooltip.textContent =
+                        `${seg.label}${seg.artist ? ' · ' + seg.artist : ''} — ${seg.plays} play${seg.plays !== 1 ? 's' : ''} (${seg.percent}%)`;
+                    tooltip.style.opacity = '1';
+                });
+                path.addEventListener('mousemove', e => {
+                    const rect = document.getElementById('donutChart').getBoundingClientRect();
+                    tooltip.style.left = (e.clientX - rect.left + 14) + 'px';
+                    tooltip.style.top  = (e.clientY - rect.top  - 12) + 'px';
+                });
+                path.addEventListener('mouseleave', () => {
+                    path.style.filter  = '';
+                    tooltip.style.opacity = '0';
+                });
+
+                svg.appendChild(path);
+            });
+
+            // Centre label
+            const g  = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const t1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t1.setAttribute('x', '100'); t1.setAttribute('y', '96');
+            t1.setAttribute('text-anchor', 'middle');
+            t1.setAttribute('fill', '#FF9B51');
+            t1.setAttribute('font-family', 'Orbitron, sans-serif');
+            t1.setAttribute('font-size', '9');
+            t1.setAttribute('font-weight', '700');
+            t1.textContent = 'TOP SONGS';
+            const t2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t2.setAttribute('x', '100'); t2.setAttribute('y', '111');
+            t2.setAttribute('text-anchor', 'middle');
+            t2.setAttribute('fill', '#8899aa');
+            t2.setAttribute('font-family', 'Space Grotesk, sans-serif');
+            t2.setAttribute('font-size', '8');
+            t2.textContent = 'by plays';
+            g.appendChild(t1);
+            g.appendChild(t2);
+            svg.appendChild(g);
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  LEGEND — Shows song name + percentage per slice
+        // ══════════════════════════════════════════════════════════
+
+        function buildLegend(chartData) {
+            const legend = document.getElementById('chartLegend');
+            legend.innerHTML = '';
+            chartData.forEach(seg => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <span class="legend-color" style="background:${seg.color}"></span>
+                    <span class="legend-label" title="${escHtml(seg.label)}">${escHtml(seg.label)}</span>
+                    <span class="legend-percent" style="color:${seg.color};font-weight:700;">${seg.percent}%</span>
+                `;
+                legend.appendChild(item);
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  TOP 10 TRACK LIST  — click to play via OrpheusPlayer
+        // ══════════════════════════════════════════════════════════
+
+        function renderTracks(sortedTracks) {
+            const card  = document.getElementById('topTracksCard');
+            card.innerHTML = '';
+
+            const top10 = sortedTracks.slice(0, TOP_N_LIST);
+
+            if (top10.length === 0) {
+                card.innerHTML = `<div class="echo-empty">
+                    <span style="font-size:32px;">🎵</span>
+                    <p>No listening history yet.<br>Start playing some music!</p>
+                </div>`;
+                return;
+            }
+
+            // Rank colours for top 3
+            const rankColors = ['#FF9B51', '#BFC9D1', '#cd7f32'];
+
+            top10.forEach((track, idx) => {
+                const item = document.createElement('div');
+                item.className = 'echo-track-item';
+                item.style.cursor = 'pointer';
+                item.dataset.songId  = track.song_id  || '';
+                item.dataset.trackId = track.track_id || '';
+
+                const rankColor = rankColors[idx] || '#8899aa';
+                const isTop3    = idx < 3;
+
+                // Cover thumbnail (if available from songs table)
+                const thumbHtml = track.cover_url
+                    ? `<img src="${escHtml(track.cover_url)}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+                    : '';
+
+                item.innerHTML = `
+                    <span class="track-rank" style="color:${rankColor};font-weight:${isTop3 ? '700' : '500'};">${idx + 1}</span>
+                    ${thumbHtml}
+                    <div class="track-info">
+                        <span class="track-name">${escHtml(track.title)}</span>
+                        <span class="track-artist">${escHtml(track.artist)}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="track-plays">${track.plays} play${track.plays !== 1 ? 's' : ''}</span>
+                        <span class="echo-play-icon" style="font-size:16px;opacity:0.6;transition:opacity 0.15s;">▶</span>
+                    </div>
+                `;
+
+                // ── Click → play the song ─────────────────────────
+                item.addEventListener('click', async () => {
+                    const songId = track.song_id;
+
+                    // Method 1: If OrpheusPlayer is loaded and has this song,
+                    //           play it directly (no page navigation).
+                    if (window.OrpheusPlayer && songId) {
+                        window.OrpheusPlayer.getSongs(songs => {
+                            const playerIdx = songs.findIndex(s => String(s.id) === String(songId));
+                            if (playerIdx >= 0) {
+                                window.OrpheusPlayer.play(playerIdx);
+                            } else {
+                                // Song not in current player queue → navigate
+                                window.location.href = `playing.html?id=${encodeURIComponent(songId)}`;
+                            }
+                        });
+                        return;
+                    }
+
+                    // Method 2: Fallback — look up song_id by title + artist
+                    if (!songId) {
+                        const sb = getClient();
+                        if (sb) {
+                            const { data } = await sb
+                                .from(SONGS_TABLE)
+                                .select('id')
+                                .ilike('title', track.title)
+                                .ilike('artist', track.artist)
+                                .limit(1)
+                                .single();
+                            if (data && data.id) {
+                                if (window.OrpheusPlayer) {
+                                    window.OrpheusPlayer.getSongs(songs => {
+                                        const idx2 = songs.findIndex(s => String(s.id) === String(data.id));
+                                        if (idx2 >= 0) window.OrpheusPlayer.play(idx2);
+                                        else window.location.href = `playing.html?id=${data.id}`;
+                                    });
+                                } else {
+                                    window.location.href = `playing.html?id=${data.id}`;
+                                }
+                                return;
+                            }
+                        }
+                    }
+
+                    // Method 3: Last resort — go to playing.html
+                    window.location.href = songId
+                        ? `playing.html?id=${encodeURIComponent(songId)}`
+                        : 'playing.html';
+                });
+
+                // Hover effect
+                item.addEventListener('mouseenter', () => {
+                    item.style.background  = 'rgba(255,155,81,0.07)';
+                    item.style.transform   = 'translateX(4px)';
+                    item.style.transition  = 'all 0.2s';
+                    const icon = item.querySelector('.echo-play-icon');
+                    if (icon) icon.style.opacity = '1';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.background = '';
+                    item.style.transform  = '';
+                    const icon = item.querySelector('.echo-play-icon');
+                    if (icon) icon.style.opacity = '0.6';
+                });
+
+                card.appendChild(item);
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  UI STATE HELPERS — loading / error / empty
+        // ══════════════════════════════════════════════════════════
+
+        function showChartLoading() {
+            document.getElementById('donutSvg').innerHTML = '';
+            document.getElementById('chartLegend').innerHTML = `
+                <div class="echo-loading" style="padding:20px 0;">
+                    <div class="echo-spinner"></div>
+                </div>`;
+        }
+
+        function showChartError(msg) {
+            document.getElementById('donutSvg').innerHTML = '';
+            document.getElementById('chartLegend').innerHTML = `
+                <div class="echo-error">
+                    <span class="echo-error-icon">⚠️</span>
+                    <p class="echo-error-msg">${escHtml(msg)}</p>
+                </div>`;
+        }
+
+        function showTracksError(msg) {
+            document.getElementById('topTracksCard').innerHTML = `
+                <div class="echo-error">
+                    <span class="echo-error-icon">⚠️</span>
+                    <p class="echo-error-msg">${escHtml(msg)}</p>
+                </div>`;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        //  INIT — Main entry point
+        // ══════════════════════════════════════════════════════════
+
+        async function initEcho() {
+            showChartLoading();
+
+            try {
+                const sb = getClient();
+                if (!sb) throw new Error('Supabase client not initialised.');
+
+                // Get current logged-in user
+                const { data: { user }, error: authErr } = await sb.auth.getUser();
+                if (authErr || !user) throw new Error('Please log in to view your Echo stats.');
+
+                // Fetch & aggregate listening history
+                const sortedTracks = await fetchTopTracks(user.id);
+                const totalPlays   = sortedTracks.reduce((s, t) => s + t.plays, 0);
+
+                // Empty state
+                if (sortedTracks.length === 0) {
+                    document.getElementById('chartLegend').innerHTML = '';
+                    document.getElementById('donutSvg').innerHTML = `
+                        <text x="100" y="105" text-anchor="middle" fill="#8899aa"
+                              font-family="Space Grotesk, sans-serif" font-size="11">
+                            No data yet
+                        </text>`;
+                    renderTracks([]);
+                    return;
+                }
+
+                // ── PIE CHART (top 5 + All Others) ────────────────
+                const chartData = buildChartData(sortedTracks, totalPlays);
+                drawDonut(chartData);
+                buildLegend(chartData);
+
+                // ── STATS PILLS ───────────────────────────────────
+                document.getElementById('statTotalPlays').textContent   = totalPlays.toLocaleString();
+                document.getElementById('statUniqueTracks').textContent = sortedTracks.length.toLocaleString();
+                document.getElementById('echoStatsRow').style.display   = 'flex';
+
+                // ── TOP 10 TRACK LIST ─────────────────────────────
+                renderTracks(sortedTracks);
+
+            } catch (err) {
+                console.error('[Echo] Error:', err);
+                showChartError(err.message  || 'Could not load chart data.');
+                showTracksError(err.message || 'Could not load track list.');
+            }
+        }
+
+        // ── Sidebar active state ──────────────────────────────────
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function () {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // ══════════════════════════════════════════════════════════
+        //  BOOT — wait for supabaseClient then run initEcho()
+        // ══════════════════════════════════════════════════════════
+
+        function waitForClientThenInit(maxWaitMs = 5000, intervalMs = 50) {
+            const started = Date.now();
+            const timer = setInterval(() => {
+                if (getClient()) {
+                    clearInterval(timer);
+                    initEcho();
+                } else if (Date.now() - started >= maxWaitMs) {
+                    clearInterval(timer);
+                    showChartError('Supabase client not found — make sure supabase.js is loaded.');
+                    showTracksError('Supabase client not found.');
+                }
+            }, intervalMs);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => waitForClientThenInit());
+        } else {
+            waitForClientThenInit();
+        }
+    </script>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

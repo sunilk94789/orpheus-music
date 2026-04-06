@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORPHEUS — Create Account</title>
+  <link rel="icon" type="image/svg+xml"
+    href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    /* ── Page Entrance Transition ── */
+    .pt-ent-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .pt-ent-left,
+    .pt-ent-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 52%;
+      will-change: transform;
+      transition: transform 1.05s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+
+    .pt-ent-left {
+      left: 0;
+      transform: translateX(0);
+      background: linear-gradient(160deg, #0d1b2a 0%, #162536 100%);
+    }
+
+    .pt-ent-right {
+      right: 0;
+      transform: translateX(0);
+      background: linear-gradient(200deg, #162536 0%, #0d1b2a 100%);
+    }
+
+    .pt-ent-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.35s ease 0.55s;
+    }
+
+    .pt-ent-logo-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      animation: pt-ent-pulse 1.6s ease-in-out infinite;
+    }
+
+    .pt-ent-brand {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #fff;
+      opacity: 0.9;
+    }
+
+    .pt-ent-brand span {
+      color: #4fc3f7;
+    }
+
+    @keyframes pt-ent-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(79, 195, 247, 0.3);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 12px rgba(79, 195, 247, 0);
+      }
+    }
+
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-left {
+      transform: translateX(-102%);
+    }
+
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-right {
+      transform: translateX(102%);
+    }
+
+    .pt-ent-wrap.pt-ent-reveal .pt-ent-center {
+      opacity: 0;
+    }
+
+    .pt-ent-wrap.pt-ent-done {
+      display: none;
+    }
+  </style>
+  <!-- Supabase -->
+  <!-- Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+</head>
+
+<body>
+
+  <div class="auth-page">
+
+    <!-- ══ LEFT DECORATIVE PANEL ══ -->
+    <aside class="auth-panel">
+      <div class="panel-edge"></div>
+
+      <!-- Brand -->
+      <div class="panel-logo">
+        <div class="panel-logo-circle">
+          <img
+            src="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg"
+            alt="Orpheus" class="panel-logo-img">
+        </div>
+        <div class="panel-logo-text">ORPHEUS<span class="panel-logo-dot">•</span></div>
+      </div>
+
+      <!-- Hero copy -->
+      <div class="panel-art">
+        <div class="panel-headline">Join the<br><em>sound</em> of<br>a generation.</div>
+        <p class="panel-tagline">Free to join. No ads. Stream a hand-picked library built for music lovers across India
+          and beyond.</p>
+        <div class="panel-features">
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Personalised feed</strong> tailored to your taste</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Echo Analytics</strong> — dive into your listening patterns</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Like &amp; Save</strong> — build your personal library</div>
+          </div>
+          <div class="panel-feature">
+            <div class="panel-feature-dot"></div>
+            <div class="panel-feature-text"><strong>Zero ads.</strong> Pure music, always.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats (live from DB, like home page) -->
+      <div class="panel-stats">
+        <div class="p-stat"><span class="p-stat-num" id="statTracks">—</span><span class="p-stat-lbl">Tracks</span>
+        </div>
+        <div class="p-stat"><span class="p-stat-num" id="statArtists">—</span><span class="p-stat-lbl">Artists</span>
+        </div>
+        <div class="p-stat"><span class="p-stat-num" id="statAlbums">—</span><span class="p-stat-lbl">Albums</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══ RIGHT FORM PANEL ══ -->
+    <div class="auth-form-side">
+      <div class="auth-box">
+
+        <div class="auth-header">
+          <a href="login.html" class="auth-back">← Back to Login</a>
+          <h1 class="auth-title" id="stepTitle">Create Account</h1>
+          <p class="auth-subtitle" id="stepSubtitle">Step 1 of 3 — Your credentials</p>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator" id="stepIndicator">
+          <div class="step active" id="si-1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Account</div>
+          </div>
+          <div class="step-line" id="sl-1"></div>
+          <div class="step" id="si-2" style="opacity:0.35">
+            <div class="step-circle">2</div>
+            <div class="step-label">Profile</div>
+          </div>
+          <div class="step-line" id="sl-2"></div>
+          <div class="step" id="si-3" style="opacity:0.35">
+            <div class="step-circle">3</div>
+            <div class="step-label">Taste</div>
+          </div>
+        </div>
+
+        <!-- ═══ STEP 1: Credentials ═══ -->
+        <form id="step1" class="auth-form" novalidate>
+
+          <div class="field-group" id="fg-email">
+            <label class="field-label" for="email">Email Address<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">✉</span>
+              <input class="field-input has-icon" id="email" type="email" placeholder="you@example.com"
+                autocomplete="email">
+            </div>
+            <span class="field-error">Please enter a valid email address.</span>
+          </div>
+
+          <div class="field-group" id="fg-username">
+            <label class="field-label" for="username">Username<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">@</span>
+              <input class="field-input has-icon" id="username" type="text" placeholder="choose a unique username"
+                maxlength="24" autocomplete="username"
+                oninput="document.getElementById('usernameChars').textContent=this.value.length+'/24'">
+            </div>
+            <div class="field-chars" id="usernameChars">0/24</div>
+            <span class="field-hint">3–24 characters. Letters, numbers and underscores only.</span>
+            <span class="field-error">Username must be 3–24 characters (letters, numbers, _).</span>
+          </div>
+
+          <div class="field-group" id="fg-pwd">
+            <label class="field-label" for="pwd">Password<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">🔒</span>
+              <input class="field-input has-icon" id="pwd" type="password" placeholder="Create a strong password"
+                autocomplete="new-password" oninput="checkStrength(this.value)">
+              <button class="pwd-toggle" type="button" onclick="togglePwd('pwd',this)">👁</button>
+            </div>
+            <div class="pwd-strength-bar" id="strengthBar"><span></span><span></span><span></span><span></span></div>
+            <div class="pwd-strength-label" id="strengthLabel">Enter a password</div>
+            <span class="field-error">Password must be at least 8 characters.</span>
+          </div>
+
+          <div class="field-group" id="fg-pwd2">
+            <label class="field-label" for="pwd2">Confirm Password<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">🔒</span>
+              <input class="field-input has-icon" id="pwd2" type="password" placeholder="Repeat your password"
+                autocomplete="new-password">
+              <button class="pwd-toggle" type="button" onclick="togglePwd('pwd2',this)">👁</button>
+            </div>
+            <span class="field-error">Passwords do not match.</span>
+          </div>
+
+          <button class="auth-submit" type="button" onclick="nextStep(1)"><span>CONTINUE</span><span>→</span></button>
+
+          <!-- Google sign-up shortcut -->
+          <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px;">
+            <div style="flex:1;height:1px;background:rgba(0,0,0,0.1)"></div>
+            <span style="font-size:11px;font-weight:600;letter-spacing:.08em;color:#aaa;">OR SIGN UP WITH</span>
+            <div style="flex:1;height:1px;background:rgba(0,0,0,0.1)"></div>
+          </div>
+          <button class="social-btn" type="button" onclick="googleSignUp()"
+            style="width:100%;justify-content:center;gap:10px;border:1.5px solid rgba(0,0,0,0.12);border-radius:10px;padding:12px 16px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;color:#222;display:flex;align-items:center;">
+            <svg width="18" height="18" viewBox="0 0 48 48">
+              <path fill="#EA4335"
+                d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z" />
+              <path fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.9-10 6.9-17z" />
+              <path fill="#FBBC05"
+                d="M10.6 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.7 10.7l7.9-6.1z" />
+              <path fill="#34A853"
+                d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-3.7-13.4-9l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+            </svg>
+            Continue with Google
+          </button>
+          <p style="font-size:11px;color:#aaa;text-align:center;margin:8px 0 0;">Name will be pre-filled from your
+            Google account</p>
+
+        </form>
+
+        <!-- ═══ STEP 2: Profile ═══ -->
+        <form id="step2" class="auth-form" novalidate style="display:none">
+
+          <!-- Google prefill notice (hidden by default, shown in google mode) -->
+          <div id="googlePrefillBanner"
+            style="display:none;background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#1a73e8;display:none;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 48 48">
+              <path fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.9-10 6.9-17z" />
+              <path fill="#34A853"
+                d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.6-3.7-13.4-9l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+              <path fill="#FBBC05"
+                d="M10.6 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.4 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.4 2.7 10.7l7.9-6.1z" />
+              <path fill="#EA4335"
+                d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z" />
+            </svg>
+            Name pre-filled from Google. Please complete the remaining fields.
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Full Name<span class="req">*</span></label>
+            <div class="field-row">
+              <div class="field-group" id="fg-fname" style="margin-bottom:0">
+                <div class="field-wrap">
+                  <input class="field-input" id="fname" type="text" placeholder="First name">
+                </div>
+                <span class="field-error">Required.</span>
+              </div>
+              <div class="field-group" id="fg-lname" style="margin-bottom:0">
+                <div class="field-wrap">
+                  <input class="field-input" id="lname" type="text" placeholder="Last name (optional)">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group" id="fg-dob">
+            <label class="field-label" for="dob">Date of Birth<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">🎂</span>
+              <input class="field-input has-icon" id="dob" type="date" min="1900-01-01">
+            </div>
+            <div class="dob-hint">You must be at least 13 years old to create an account.</div>
+            <span class="field-error">Please enter a valid date of birth (13+ years).</span>
+          </div>
+
+          <div class="field-group" id="fg-gender">
+            <label class="field-label" for="gender">Gender</label>
+            <div class="field-wrap">
+              <span class="field-icon">👤</span>
+              <select class="field-input has-icon" id="gender">
+                <option value="" disabled selected>Select gender (optional)</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ── Country Search ── -->
+          <div class="field-group" id="fg-country">
+            <label class="field-label">Country / Region<span class="req">*</span></label>
+            <div class="country-search-wrap">
+              <span class="field-icon" style="z-index:2">🌍</span>
+              <input class="country-search-input" id="countrySearch" type="text"
+                placeholder="Search or select your country…" autocomplete="off" oninput="filterCountries(this.value)"
+                onfocus="openCountryDropdown()" onkeydown="countryKeyNav(event)">
+              <button class="country-clear-btn" id="countryClearBtn" onclick="clearCountry()" type="button">✕</button>
+              <div class="country-dropdown" id="countryDropdown"></div>
+            </div>
+            <input type="hidden" id="countryValue">
+            <span class="field-error">Please select your country.</span>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn-back-step" type="button" id="step2BackBtn" onclick="goStep(1)">← Back</button>
+            <button class="auth-submit" type="button" onclick="nextStep(2)"
+              style="flex:1"><span>CONTINUE</span><span>→</span></button>
+          </div>
+        </form>
+
+        <!-- ═══ STEP 3: Music Taste ═══ -->
+        <form id="step3" class="auth-form" novalidate style="display:none">
+
+          <!-- Avatar moved here from step 2 -->
+          <div class="field-group">
+            <label class="field-label">Profile Avatar</label>
+            <div class="avatar-picker">
+              <div class="avatar-opt selected" data-val="🎧" onclick="pickAvatar(this)">🎧</div>
+              <div class="avatar-opt" data-val="🎵" onclick="pickAvatar(this)">🎵</div>
+              <div class="avatar-opt" data-val="🎸" onclick="pickAvatar(this)">🎸</div>
+              <div class="avatar-opt" data-val="🎤" onclick="pickAvatar(this)">🎤</div>
+              <div class="avatar-opt" data-val="🎹" onclick="pickAvatar(this)">🎹</div>
+              <div class="avatar-opt" data-val="🥁" onclick="pickAvatar(this)">🥁</div>
+              <div class="avatar-opt" data-val="🎺" onclick="pickAvatar(this)">🎺</div>
+              <div class="avatar-opt" data-val="🦅" onclick="pickAvatar(this)">🦅</div>
+            </div>
+          </div>
+
+          <div class="field-group" id="fg-lang">
+            <label class="field-label" for="lang">Preferred Music Language<span class="req">*</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">🗣</span>
+              <select class="field-input has-icon" id="lang">
+                <option value="" disabled selected>Choose a language</option>
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="pt">Portuguese</option>
+                <option value="ar">Arabic</option>
+                <option value="ko">Korean</option>
+                <option value="ja">Japanese</option>
+                <option value="de">German</option>
+                <option value="ru">Russian</option>
+                <option value="tr">Turkish</option>
+                <option value="it">Italian</option>
+                <option value="zh">Chinese (Mandarin)</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <span class="field-error">Please select a language.</span>
+          </div>
+
+          <div class="field-group" id="fg-genres">
+            <label class="field-label">Favourite Genres<span class="req">*</span>
+              <span style="font-weight:400;color:rgba(37,52,63,0.4)">(pick 1–5)</span>
+            </label>
+            <div class="genre-picker" id="genrePicker">
+              <div class="genre-tag" onclick="toggleGenre(this)">Hip-Hop</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Pop</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">R&amp;B / Soul</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Electronic</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Rock</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Metal</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Jazz</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Classical</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Country</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Latin</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Afrobeats</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">K-Pop</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Bollywood</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Reggae</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Lo-fi</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Indie</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Gospel</div>
+              <div class="genre-tag" onclick="toggleGenre(this)">Punk</div>
+            </div>
+            <span class="field-error">Please pick at least one genre.</span>
+          </div>
+
+          <div class="field-group" id="fg-habit">
+            <label class="field-label" for="habit">When do you listen most?</label>
+            <div class="field-wrap">
+              <span class="field-icon">🕐</span>
+              <select class="field-input has-icon" id="habit">
+                <option value="" disabled selected>Choose (optional)</option>
+                <option value="morning">Morning — routines &amp; commute</option>
+                <option value="work">Work / Study — focus &amp; background</option>
+                <option value="workout">Workout — gym &amp; exercise</option>
+                <option value="evening">Evening — wind down &amp; relax</option>
+                <option value="night">Late Night — just vibing</option>
+                <option value="all">All day long</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group" id="fg-bio">
+            <label class="field-label" for="bio">Short Bio
+              <span style="font-weight:400;color:rgba(37,52,63,0.4)">(optional)</span>
+            </label>
+            <div class="field-wrap">
+              <textarea class="field-input" id="bio" style="height:80px;padding-top:12px;resize:none;padding-left:14px;"
+                placeholder="Tell other listeners about yourself…" maxlength="150"
+                oninput="document.getElementById('bioChars').textContent=this.value.length+'/150'"></textarea>
+            </div>
+            <div class="field-chars" id="bioChars">0/150</div>
+          </div>
+
+          <div class="terms-row">
+            <input class="terms-check" type="checkbox" id="terms">
+            <label class="terms-label" for="terms">
+              I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html"
+                target="_blank">Privacy Policy</a>. I confirm I am at
+              least 13 years old.
+            </label>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn-back-step" type="button" onclick="goStep(2)">← Back</button>
+            <button class="auth-submit" type="button" onclick="submitSignup()" id="signupBtn" style="flex:1">
+              <span>CREATE ACCOUNT</span><span>🎵</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- ═══ SUCCESS ═══ -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-icon">🎉</div>
+          <div class="success-title">You're In!</div>
+          <p class="success-msg">
+            Welcome to ORPHEUS, <span class="success-username" id="welcomeUsername"></span>!<br>
+            Your account has been created. Get ready to discover your next favourite track.
+          </p>
+          <button class="auth-submit" onclick="navigateTo('home.html')" style="margin-top:8px">
+            <span>GO TO HOME</span><span>→</span>
+          </button>
+        </div>
+
+        <p class="auth-footer" id="loginLink" style="margin-top:20px">
+          Already have an account? <a href="login.html">Sign in →</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ OTP VERIFICATION MODAL ══ -->
+  <div class="otp-overlay" id="otpModal">
+    <div class="otp-box">
+      <button class="otp-close" onclick="closeOtp()" aria-label="Close">✕</button>
+
+      <div id="otpFormWrap">
+        <div class="otp-icon">📧</div>
+        <div class="otp-title">Verify Your Email</div>
+        <p class="otp-subtitle">We sent a 6-digit code to<br><strong id="otpEmailDisplay"></strong></p>
+
+        <div class="otp-inputs" id="otpInputs">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        </div>
+        <div class="otp-error-msg" id="otpError"></div>
+
+        <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyOtp()">
+          <span>VERIFY & CREATE ACCOUNT</span><span>→</span>
+        </button>
+
+        <div class="otp-resend-row">
+          Didn't receive it?&nbsp;
+          <button class="otp-resend-btn" id="otpResendBtn" onclick="resendOtp()" disabled>
+            Resend in <span class="otp-timer" id="otpTimerDisplay">30s</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="otp-success-wrap" id="otpSuccess">
+        <div class="otp-success-icon">✅</div>
+        <div class="otp-success-title">Email Verified!</div>
+        <p class="otp-success-msg">Creating your account…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOAST ══ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══ PAGE ENTRANCE ══ -->
+  <div class="pt-ent-wrap" id="ptEntrance">
+    <div class="pt-ent-left"></div>
+    <div class="pt-ent-right"></div>
+    <div class="pt-ent-center">
+      <div class="pt-ent-logo-ring">
+        <img src="no bg orpheus.png" alt="Orpheus" style="width:44px;height:44px;object-fit:contain;">
+      </div>
+      <div class="pt-ent-brand">ORPHEUS<span>•</span></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE TRANSITION ══ -->
+  <div class="pt-overlay" id="ptOverlay">
+    <div class="pt-panel pt-left"></div>
+    <div class="pt-panel pt-right"></div>
+    <div class="pt-center">
+      <div class="pt-logo-ring">
+        <span class="pt-logo-emoji"><img src="no bg orpheus.png" alt="Orpheus"
+            style="width:48px;height:48px;object-fit:contain;display:block;"></span>
+        <svg class="pt-ring-svg" viewBox="0 0 120 120">
+          <circle class="pt-ring-track" cx="60" cy="60" r="54" />
+          <circle class="pt-ring-progress" cx="60" cy="60" r="54" />
+        </svg>
+      </div>
+      <div class="pt-wordmark">ORPHEUS<span>•</span></div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Page Entrance ── */
+    (function () {
+      const ent = document.getElementById('ptEntrance');
+      window.addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            ent.classList.add('pt-ent-reveal');
+            setTimeout(function () { ent.classList.add('pt-ent-done'); }, 1150);
+          });
+        });
+      });
+    })();
+
+    /* ── Live Panel Stats (Tracks / Artists / Albums) ── */
+    (async function loadPanelStats() {
+      const SB_URL = SUPABASE_URL;
+      const SB_KEY = SUPABASE_KEY;
+      const hdrs = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Accept': 'application/json' };
+      try {
+        const trackRes = await fetch(`${SB_URL}/rest/v1/songs?select=id`, {
+          headers: { ...hdrs, 'Prefer': 'count=exact', 'Range': '0-0' }
+        });
+        const totalTracks = parseInt(trackRes.headers.get('content-range')?.split('/')[1] || '0', 10);
+
+        const dataRes = await fetch(`${SB_URL}/rest/v1/songs?select=artist,album`, { headers: hdrs });
+        const rows = await dataRes.json();
+        const uniqueArtists = new Set(rows.map(r => r.artist).filter(Boolean)).size;
+        const uniqueAlbums = new Set(rows.map(r => r.album).filter(Boolean)).size;
+
+        function fmtCount(n) {
+          if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+          if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+          return String(n);
+        }
+
+        const el = id => document.getElementById(id);
+        if (el('statTracks')) el('statTracks').textContent = fmtCount(totalTracks);
+        if (el('statArtists')) el('statArtists').textContent = fmtCount(uniqueArtists);
+        if (el('statAlbums')) el('statAlbums').textContent = fmtCount(uniqueAlbums);
+      } catch (err) {
+        console.warn('Panel stats load error:', err);
+      }
+    })();
+
+    /* ══════════════════════════════════════
+       COUNTRY DATA
+    ══════════════════════════════════════ */
+    const COUNTRIES = [
+      {
+        group: 'The Americas', list: [
+          { flag: '🇺🇸', name: 'United States', val: 'us' },
+          { flag: '🇨🇦', name: 'Canada', val: 'ca' },
+          { flag: '🇧🇷', name: 'Brazil', val: 'br' },
+          { flag: '🇲🇽', name: 'Mexico', val: 'mx' },
+          { flag: '🇦🇷', name: 'Argentina', val: 'ar' },
+          { flag: '🇨🇴', name: 'Colombia', val: 'co' },
+          { flag: '🇨🇱', name: 'Chile', val: 'cl' },
+          { flag: '🇵🇪', name: 'Peru', val: 'pe' },
+        ]
+      },
+      {
+        group: 'Europe', list: [
+          { flag: '🇬🇧', name: 'United Kingdom', val: 'gb' },
+          { flag: '🇩🇪', name: 'Germany', val: 'de' },
+          { flag: '🇫🇷', name: 'France', val: 'fr' },
+          { flag: '🇮🇹', name: 'Italy', val: 'it' },
+          { flag: '🇪🇸', name: 'Spain', val: 'es' },
+          { flag: '🇳🇱', name: 'Netherlands', val: 'nl' },
+          { flag: '🇸🇪', name: 'Sweden', val: 'se' },
+          { flag: '🇳🇴', name: 'Norway', val: 'no' },
+          { flag: '🇵🇱', name: 'Poland', val: 'pl' },
+          { flag: '🇷🇺', name: 'Russia', val: 'ru' },
+          { flag: '🇵🇹', name: 'Portugal', val: 'pt' },
+          { flag: '🇧🇪', name: 'Belgium', val: 'be' },
+          { flag: '🇨🇭', name: 'Switzerland', val: 'ch' },
+          { flag: '🇦🇹', name: 'Austria', val: 'at' },
+          { flag: '🇬🇷', name: 'Greece', val: 'gr' },
+          { flag: '🇫🇮', name: 'Finland', val: 'fi' },
+          { flag: '🇩🇰', name: 'Denmark', val: 'dk' },
+          { flag: '🇷🇴', name: 'Romania', val: 'ro' },
+          { flag: '🇺🇦', name: 'Ukraine', val: 'ua' },
+          { flag: '🇨🇿', name: 'Czech Republic', val: 'cz' },
+          { flag: '🇭🇺', name: 'Hungary', val: 'hu' },
+        ]
+      },
+      {
+        group: 'Asia Pacific', list: [
+          { flag: '🇮🇳', name: 'India', val: 'in' },
+          { flag: '🇯🇵', name: 'Japan', val: 'jp' },
+          { flag: '🇰🇷', name: 'South Korea', val: 'kr' },
+          { flag: '🇨🇳', name: 'China', val: 'cn' },
+          { flag: '🇮🇩', name: 'Indonesia', val: 'id' },
+          { flag: '🇵🇭', name: 'Philippines', val: 'ph' },
+          { flag: '🇹🇭', name: 'Thailand', val: 'th' },
+          { flag: '🇻🇳', name: 'Vietnam', val: 'vn' },
+          { flag: '🇲🇾', name: 'Malaysia', val: 'my' },
+          { flag: '🇸🇬', name: 'Singapore', val: 'sg' },
+          { flag: '🇵🇰', name: 'Pakistan', val: 'pk' },
+          { flag: '🇧🇩', name: 'Bangladesh', val: 'bd' },
+          { flag: '🇱🇰', name: 'Sri Lanka', val: 'lk' },
+          { flag: '🇳🇵', name: 'Nepal', val: 'np' },
+          { flag: '🇦🇺', name: 'Australia', val: 'au' },
+          { flag: '🇳🇿', name: 'New Zealand', val: 'nz' },
+        ]
+      },
+      {
+        group: 'Middle East & Africa', list: [
+          { flag: '🇸🇦', name: 'Saudi Arabia', val: 'sa' },
+          { flag: '🇦🇪', name: 'UAE', val: 'ae' },
+          { flag: '🇹🇷', name: 'Turkey', val: 'tr' },
+          { flag: '🇮🇱', name: 'Israel', val: 'il' },
+          { flag: '🇪🇬', name: 'Egypt', val: 'eg' },
+          { flag: '🇮🇷', name: 'Iran', val: 'ir' },
+          { flag: '🇳🇬', name: 'Nigeria', val: 'ng' },
+          { flag: '🇿🇦', name: 'South Africa', val: 'za' },
+          { flag: '🇬🇭', name: 'Ghana', val: 'gh' },
+          { flag: '🇰🇪', name: 'Kenya', val: 'ke' },
+          { flag: '🇲🇦', name: 'Morocco', val: 'ma' },
+          { flag: '🇸🇳', name: 'Senegal', val: 'sn' },
+        ]
+      },
+      {
+        group: 'Other', list: [
+          { flag: '🌐', name: 'Other / Prefer not to say', val: 'other' },
+        ]
+      },
+    ];
+
+    let selectedCountryVal = '';
+    let highlightedIdx = -1;
+    let dropdownOpen = false;
+
+    function getAllCountries() {
+      return COUNTRIES.flatMap(g => g.list);
+    }
+
+    function buildDropdown(filter = '') {
+      const dd = document.getElementById('countryDropdown');
+      dd.innerHTML = '';
+      const q = filter.trim().toLowerCase();
+      let totalVisible = 0;
+
+      COUNTRIES.forEach(group => {
+        const matches = q
+          ? group.list.filter(c => c.name.toLowerCase().includes(q))
+          : group.list;
+        if (!matches.length) return;
+
+        const lbl = document.createElement('div');
+        lbl.className = 'country-group-label';
+        lbl.textContent = group.group;
+        dd.appendChild(lbl);
+
+        matches.forEach(c => {
+          const opt = document.createElement('div');
+          opt.className = 'country-option' + (c.val === selectedCountryVal ? ' selected' : '');
+          opt.dataset.val = c.val;
+          opt.dataset.name = c.name;
+          opt.innerHTML = `<span>${c.flag}</span><span>${c.name}</span>`;
+          opt.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            selectCountry(c.val, c.flag + ' ' + c.name);
+          });
+          dd.appendChild(opt);
+          totalVisible++;
+        });
+      });
+
+      if (totalVisible === 0) {
+        const none = document.createElement('div');
+        none.className = 'country-no-results';
+        none.textContent = 'No countries found for "' + filter + '"';
+        dd.appendChild(none);
+      }
+      highlightedIdx = -1;
+    }
+
+    function openCountryDropdown() {
+      buildDropdown(document.getElementById('countrySearch').value);
+      document.getElementById('countryDropdown').classList.add('open');
+      document.getElementById('countrySearch').classList.add('open');
+      dropdownOpen = true;
+    }
+
+    function closeCountryDropdown() {
+      document.getElementById('countryDropdown').classList.remove('open');
+      document.getElementById('countrySearch').classList.remove('open');
+      dropdownOpen = false;
+      // If no country selected, restore placeholder
+      if (!selectedCountryVal) {
+        document.getElementById('countrySearch').value = '';
+      }
+    }
+
+    function filterCountries(val) {
+      if (!dropdownOpen) openCountryDropdown();
+      buildDropdown(val);
+      if (selectedCountryVal && val !== '') {
+        // User started typing after selection — clear selection
+        selectedCountryVal = '';
+        document.getElementById('countryValue').value = '';
+        document.getElementById('countryClearBtn').classList.remove('visible');
+        document.getElementById('fg-country').classList.remove('valid');
+      }
+    }
+
+    function selectCountry(val, label) {
+      selectedCountryVal = val;
+      document.getElementById('countryValue').value = val;
+      document.getElementById('countrySearch').value = label;
+      document.getElementById('countryClearBtn').classList.add('visible');
+      document.getElementById('fg-country').classList.remove('has-error');
+      document.getElementById('fg-country').classList.add('valid');
+      closeCountryDropdown();
+    }
+
+    function clearCountry() {
+      selectedCountryVal = '';
+      document.getElementById('countryValue').value = '';
+      document.getElementById('countrySearch').value = '';
+      document.getElementById('countryClearBtn').classList.remove('visible');
+      document.getElementById('fg-country').classList.remove('valid', 'has-error');
+      document.getElementById('countrySearch').focus();
+    }
+
+    function countryKeyNav(e) {
+      const dd = document.getElementById('countryDropdown');
+      const opts = dd.querySelectorAll('.country-option');
+      if (!opts.length) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        highlightedIdx = Math.min(highlightedIdx + 1, opts.length - 1);
+        refreshHighlight(opts);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        highlightedIdx = Math.max(highlightedIdx - 1, 0);
+        refreshHighlight(opts);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (highlightedIdx >= 0 && opts[highlightedIdx]) {
+          const opt = opts[highlightedIdx];
+          selectCountry(opt.dataset.val, opt.querySelector('span:last-child').textContent);
+        }
+      } else if (e.key === 'Escape') {
+        closeCountryDropdown();
+      }
+    }
+
+    function refreshHighlight(opts) {
+      opts.forEach((o, i) => {
+        o.classList.toggle('highlighted', i === highlightedIdx);
+        if (i === highlightedIdx) o.scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function (e) {
+      const wrap = document.querySelector('.country-search-wrap');
+      if (wrap && !wrap.contains(e.target)) closeCountryDropdown();
+    });
+
+    /* ══════════════════════════════════════
+       FORM LOGIC
+    ══════════════════════════════════════ */
+    let selectedAvatar = '🎧';
+    let selectedGenres = [];
+    let currentStep = 1;
+
+    document.getElementById('dob').max = new Date().toISOString().split('T')[0];
+
+    function togglePwd(id, btn) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
+
+    function checkStrength(val) {
+      const bar = document.getElementById('strengthBar');
+      const label = document.getElementById('strengthLabel');
+      bar.className = 'pwd-strength-bar';
+      if (!val) { label.textContent = 'Enter a password'; label.style.color = ''; return; }
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = ['strength-weak', 'strength-fair', 'strength-good', 'strength-strong'];
+      const labels = ['Weak — too short', 'Fair — add numbers or symbols', 'Good — almost there!', 'Strong — excellent!'];
+      const colors = ['var(--c-error)', '#ff9800', 'var(--c-ok)', 'var(--c-ok)'];
+      bar.classList.add(levels[score - 1] || levels[0]);
+      label.textContent = labels[score - 1] || labels[0];
+      label.style.color = colors[score - 1] || colors[0];
+    }
+
+    function pickAvatar(el) {
+      document.querySelectorAll('.avatar-opt').forEach(a => a.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedAvatar = el.dataset.val;
+    }
+
+    function toggleGenre(el) {
+      const genre = el.textContent.trim();
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        selectedGenres = selectedGenres.filter(g => g !== genre);
+      } else {
+        if (selectedGenres.length >= 5) {
+          showToast('You can pick up to 5 genres', 'info');
+          return;
+        }
+        el.classList.add('selected');
+        selectedGenres.push(genre);
+      }
+    }
+
+    function goStep(n) {
+      for (let i = 1; i <= 3; i++) {
+        const s = document.getElementById('step' + i);
+        if (s) s.style.display = 'none';
+      }
+      const target = document.getElementById('step' + n);
+      if (target) target.style.display = 'flex';
+      currentStep = n;
+      updateStepUI(n);
+    }
+
+    function updateStepUI(n) {
+      if (_googleMode) {
+        // Google mode: 2-step flow (Profile → Taste)
+        const gTitles = { 2: 'Complete Your Profile', 3: 'Music Taste' };
+        const gSubs = { 2: 'Step 1 of 2 — Tell us about you', 3: 'Step 2 of 2 — Personalise your feed' };
+        document.getElementById('stepTitle').textContent = gTitles[n] || '';
+        document.getElementById('stepSubtitle').textContent = gSubs[n] || '';
+
+        // Keep Step 1 hidden
+        const si1 = document.getElementById('si-1');
+        const sl1 = document.getElementById('sl-1');
+        if (si1) si1.style.display = 'none';
+        if (sl1) sl1.style.display = 'none';
+
+        // Step 2 circle = "1", Step 3 circle = "2"
+        const si2 = document.getElementById('si-2');
+        const si3 = document.getElementById('si-3');
+        if (si2) {
+          si2.querySelector('.step-circle').textContent = '1';
+          si2.classList.remove('active', 'done');
+          si2.style.opacity = '1';
+          if (n === 2) si2.classList.add('active');
+          else if (n > 2) si2.classList.add('done');
+        }
+        const sl2 = document.getElementById('sl-2');
+        if (sl2) sl2.classList.toggle('done', n > 2);
+        if (si3) {
+          si3.querySelector('.step-circle').textContent = '2';
+          si3.classList.remove('active', 'done');
+          si3.style.opacity = '1';
+          if (n === 3) si3.classList.add('active');
+          else si3.style.opacity = '0.35';
+        }
+        return;
+      }
+
+      // Normal (email) mode: 3-step flow
+      const titles = ['', 'Your Credentials', 'Your Profile', 'Music Taste'];
+      const subs = ['', 'Step 1 of 3 — Account details', 'Step 2 of 3 — Tell us about you', 'Step 3 of 3 — Personalise your feed'];
+      document.getElementById('stepTitle').textContent = titles[n];
+      document.getElementById('stepSubtitle').textContent = subs[n];
+      for (let i = 1; i <= 3; i++) {
+        const si = document.getElementById('si-' + i);
+        si.classList.remove('active', 'done');
+        si.style.opacity = '1';
+        if (i < n) si.classList.add('done');
+        else if (i === n) si.classList.add('active');
+        else si.style.opacity = '0.35';
+      }
+      for (let i = 1; i <= 2; i++)
+        document.getElementById('sl-' + i).classList.toggle('done', i < n);
+    }
+
+    function vf(groupId, inputId, rule) {
+      const fg = document.getElementById(groupId);
+      if (!fg) return true;
+      const el = document.getElementById(inputId);
+      const val = (el ? el.value : '').trim();
+      const ok = rule(val);
+      fg.classList.toggle('has-error', !ok);
+      fg.classList.toggle('valid', ok);
+      return ok;
+    }
+
+    function nextStep(from) {
+      if (from === 1) {
+        const e1 = vf('fg-email', 'email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+        const e2 = vf('fg-username', 'username', v => /^[a-zA-Z0-9_]{3,24}$/.test(v));
+        const e3 = vf('fg-pwd', 'pwd', v => v.length >= 8);
+        const p1 = document.getElementById('pwd').value;
+        const p2 = document.getElementById('pwd2').value;
+        const e4 = vf('fg-pwd2', 'pwd2', () => p2 === p1 && p2.length > 0);
+        if (!e1 || !e2 || !e3 || !e4) return;
+        goStep(2);
+
+      } else if (from === 2) {
+        // Validate username here too (for Google mode where username is on Step 2)
+        if (_googleMode) {
+          const uOk = vf('fg-username', 'username', v => /^[a-zA-Z0-9_]{3,24}$/.test(v));
+          if (!uOk) return;
+        }
+        // lname is optional — only fname required
+        const f1 = vf('fg-fname', 'fname', v => v.length > 0);
+        const dobVal = document.getElementById('dob').value;
+        let dobOk = false;
+        if (dobVal) {
+          const age = (Date.now() - new Date(dobVal)) / (365.25 * 24 * 3600 * 1000);
+          dobOk = age >= 13;
+        }
+        const fgd = document.getElementById('fg-dob');
+        fgd.classList.toggle('has-error', !dobOk);
+        fgd.classList.toggle('valid', dobOk);
+
+        const countryOk = !!selectedCountryVal;
+        const fgc = document.getElementById('fg-country');
+        fgc.classList.toggle('has-error', !countryOk);
+
+        if (!f1 || !dobOk || !countryOk) return;
+        goStep(3);
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function navigateTo(url) {
+      const ov = document.getElementById('ptOverlay');
+      ov.classList.add('pt-entering');
+      setTimeout(() => ov.classList.add('pt-show-content'), 380);
+      setTimeout(() => { window.location.href = url; }, 1100);
+    }
+
+    // ── Google mode flag ──
+    let _googleMode = false;
+    let _googleUserId = null;
+
+    /* ─────────────────────────────────────────
+       GOOGLE SIGN-UP — triggers OAuth redirect
+    ───────────────────────────────────────── */
+    async function googleSignUp() {
+      try {
+        const redirectTo = window.location.href.split('?')[0].split('#')[0];
+        showToast('Redirecting to Google...', 'info');
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo }
+        });
+        if (error) {
+          console.error('Google OAuth error:', error);
+          showToast('Google error: ' + error.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Could not start Google login. Check F12.', 'error');
+      }
+    }
+
+    function applyGooglePrefill(user) {
+      const meta = user.user_metadata || {};
+      _googleMode = true;
+      _googleUserId = user.id;
+
+      // Store Google email in the hidden email field
+      const emailEl = document.getElementById('email');
+      if (emailEl) emailEl.value = user.email || '';
+
+      // ── Pre-fill username from Google name ──
+      const raw = (meta.full_name || meta.name || user.email || '');
+      const suggested = raw.toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .slice(0, 24);
+      const usernameEl = document.getElementById('username');
+      if (usernameEl && suggested) {
+        usernameEl.value = suggested;
+        const charCount = document.getElementById('usernameChars');
+        if (charCount) charCount.textContent = suggested.length + '/24';
+      }
+
+      // ── Pre-fill first / last name from Google ──
+      const fullName = meta.full_name || meta.name || '';
+      const nameParts = fullName.trim().split(/\s+/);
+      const fnameEl = document.getElementById('fname');
+      const lnameEl = document.getElementById('lname');
+      if (fnameEl) fnameEl.value = nameParts[0] || '';
+      if (lnameEl) lnameEl.value = nameParts.slice(1).join(' ') || '';
+
+      // ── Move username field into Step 2 (above Full Name) ──
+      const usernameGroup = document.getElementById('fg-username');
+      const step2Form = document.getElementById('step2');
+      const banner = document.getElementById('googlePrefillBanner');
+      if (usernameGroup && step2Form && banner) {
+        // Insert username right after the Google banner
+        banner.after(usernameGroup);
+      }
+
+      // Show the Google prefill banner
+      if (banner) banner.style.display = 'flex';
+
+      // Hide the Step 2 back button (no Step 1 to go back to)
+      const backBtn = document.getElementById('step2BackBtn');
+      if (backBtn) backBtn.style.display = 'none';
+
+      // ── Jump directly to Step 2, skip Step 1 ──
+      goStep(2);
+
+      // Update header for Google flow
+      document.getElementById('stepTitle').textContent = 'Complete Your Profile';
+      document.getElementById('stepSubtitle').textContent = 'Step 1 of 2 — Tell us about you';
+
+      // Update step indicator: hide Step 1 circle, reflow as 2-step process
+      const si1 = document.getElementById('si-1');
+      const sl1 = document.getElementById('sl-1');
+      if (si1) si1.style.display = 'none';
+      if (sl1) sl1.style.display = 'none';
+      // Mark step 2 as active, step 3 as upcoming
+      const si2 = document.getElementById('si-2');
+      const si3 = document.getElementById('si-3');
+      if (si2) { si2.classList.add('active'); si2.style.opacity = '1'; si2.querySelector('.step-circle').textContent = '1'; }
+      if (si3) { si3.querySelector('.step-circle').textContent = '2'; }
+
+      showToast('Google connected! Complete your profile to continue.', 'success');
+    }
+
+    // Only runs when URL has ?code= — returning from Google OAuth
+    // Normal page visits: search is empty, IIFE exits immediately with no side effects
+    (async function handleGoogleCallback() {
+      const isCallback = window.location.search.includes('code=') ||
+        window.location.hash.includes('access_token');
+      if (!isCallback) return;
+
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
+        async (event, session) => {
+          if (event !== 'SIGNED_IN' || !session) return;
+          subscription.unsubscribe();
+
+          const provider = session.user.app_metadata?.provider || '';
+          if (provider !== 'google') return;
+
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          const { data: existing } = await supabaseClient
+            .from('profiles')
+            .select('username')
+            .eq('id', session.user.id)
+            .single();
+
+          if (existing?.username) {
+            sessionStorage.setItem('orpheus_user', existing.username);
+            sessionStorage.setItem('orpheus_uid', session.user.id);
+            navigateTo('home.html');
+            return;
+          }
+
+          applyGooglePrefill(session.user);
+        }
+      );
+    })();
+
+    /* ─────────────────────────────────────────
+       SUBMIT SIGNUP (Step 3 final button)
+    ───────────────────────────────────────── */
+    function submitSignup() {
+      const langOk = vf('fg-lang', 'lang', v => v.length > 0);
+      const genreOk = selectedGenres.length > 0;
+      document.getElementById('fg-genres').classList.toggle('has-error', !genreOk);
+      if (!langOk || !genreOk) return;
+
+      if (!document.getElementById('terms').checked) {
+        showToast('Please accept the Terms of Service to continue.', 'error');
+        return;
+      }
+
+      finaliseAccount();
+    }
+
+    /* ─────────────────────────────────────────
+       FINALISE ACCOUNT
+       Handles both email signup and Google signup
+    ───────────────────────────────────────── */
+    async function finaliseAccount() {
+      const btn = document.getElementById('signupBtn');
+      if (btn) { btn.classList.add('loading'); btn.innerHTML = '<span>CREATING ACCOUNT…</span>'; }
+
+      const uname = document.getElementById('username').value.trim();
+      const fname = document.getElementById('fname').value.trim();
+      const lname = document.getElementById('lname').value.trim();
+      const dob = document.getElementById('dob').value;
+      const gender = document.getElementById('gender').value;
+      const country = document.getElementById('countryValue').value;
+      const lang = document.getElementById('lang').value;
+      const displayName = (fname && lname) ? fname + ' ' + lname : fname || uname;
+
+      try {
+        let userId;
+        let _signUpData = null;  // holds signUp() response; used after the if/else block
+
+        if (_googleMode && _googleUserId) {
+          // ── Google path: user is already auth'd, just save profile ──
+          userId = _googleUserId;
+
+        } else {
+          // ── Email path: create Supabase auth account ──
+          const email = document.getElementById('email').value.trim();
+          const password = document.getElementById('pwd').value;
+
+          // ── Pass ALL profile fields in metadata so the DB trigger saves everything ──
+          const { data, error: signUpError } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                username: uname,
+                display_name: displayName,
+                avatar: selectedAvatar,
+                fname,
+                lname: lname || null,
+                dob: dob || null,
+                gender: gender || null,
+                country: country || null,
+                lang,
+                genres: selectedGenres
+              }
+            }
+          });
+
+          if (signUpError) {
+            let msg = signUpError.message;
+            if (msg.includes('already registered')) msg = 'This email is already registered. Try logging in.';
+            showToast(msg, 'error');
+            if (btn) { btn.classList.remove('loading'); btn.innerHTML = '<span>CREATE ACCOUNT</span><span>🎵</span>'; }
+            return;
+          }
+
+          userId = data.user.id;
+          _signUpData = data;  // ← save to outer scope for needsEmailConfirm check below
+
+          // ── If Supabase returned a live session (email confirm disabled), upsert the full profile now ──
+          // ── If no session (email confirm required), the DB trigger already saved what it can ──
+          if (data.session) {
+            const { error: profileError } = await supabaseClient
+              .from('profiles')
+              .upsert({
+                id: userId,
+                email: email,
+                username: uname,
+                fname,
+                lname: lname || null,
+                dob: dob || null,
+                gender: gender || null,
+                country: country || null,
+                lang,
+                genres: selectedGenres,
+                avatar: selectedAvatar
+              });
+            if (profileError) {
+              console.warn('Profile upsert error:', profileError.message);
+            }
+          }
+        }
+
+        // ── Google path: upsert full profile (session already active) ──
+        if (_googleMode && _googleUserId) {
+          const googleEmail = (await supabaseClient.auth.getUser()).data.user.email;
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .upsert({
+              id: userId,
+              email: googleEmail,
+              username: uname,
+              fname,
+              lname: lname || null,
+              dob: dob || null,
+              gender: gender || null,
+              country: country || null,
+              lang,
+              genres: selectedGenres,
+              avatar: selectedAvatar
+            });
+          if (profileError) console.warn('Profile upsert error:', profileError.message);
+        }
+
+        // ── Store locally ──
+        sessionStorage.setItem('orpheus_user', uname);
+        sessionStorage.setItem('orpheus_uid', userId);
+        localStorage.setItem('orpheus_display_name', displayName);
+        localStorage.setItem('orpheus_avatar', selectedAvatar);
+        localStorage.setItem('orpheus_genres', JSON.stringify(selectedGenres));
+
+        // ── Determine if email confirmation is still pending ──
+        // _signUpData is null for Google path (already has session), set above for email path
+        const needsEmailConfirm = !_googleMode && !_signUpData?.session;
+
+        // ── Show success screen ──
+        document.getElementById('welcomeUsername').textContent = '@' + uname;
+        document.getElementById('step3').style.display = 'none';
+        if (document.getElementById('loginLink')) document.getElementById('loginLink').style.display = 'none';
+        document.getElementById('stepIndicator').style.display = 'none';
+        document.getElementById('stepSubtitle').style.display = 'none';
+        document.getElementById('stepTitle').textContent = needsEmailConfirm ? 'Check Your Email!' : 'Account Created!';
+        document.getElementById('successScreen').style.display = 'flex';
+
+        if (needsEmailConfirm) {
+          // Update success screen to show email verification message
+          const welcomeEl = document.getElementById('welcomeUsername');
+          if (welcomeEl) welcomeEl.textContent = '@' + uname;
+          const successMsg = document.querySelector('#successScreen p, #successScreen .success-msg');
+          if (successMsg) successMsg.textContent = 'We sent a confirmation link to ' + document.getElementById('email').value.trim() + '. Click it to activate your account, then log in.';
+          showToast('Account created! Check your email to confirm.', 'success');
+          // Don't auto-redirect — user must verify email first
+        } else {
+          showToast('Welcome to ORPHEUS, @' + uname + '! 🎵', 'success');
+          setTimeout(() => navigateTo('home.html'), 3200);
+        }
+
+      } catch (err) {
+        console.error(err);
+        showToast('Something went wrong. Please try again.', 'error');
+        if (btn) { btn.classList.remove('loading'); btn.innerHTML = '<span>CREATE ACCOUNT</span><span>🎵</span>'; }
+      }
+    }
+
+    /* ── OTP State ── */
+    let _otpEmail = '';
+    let _otpTimerInterval = null;
+
+    /* generateOtp removed — real Supabase email OTP used instead (TC-F20, TC-S02, TC-S03) */
+
+    async function openOtp(email) {
+      _otpEmail = email;
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email: email,
+          options: { shouldCreateUser: true }
+        });
+        if (error) {
+          showToast('Could not send verification code: ' + error.message, 'error');
+          return;
+        }
+      } catch (err) {
+        showToast('Could not send verification code: ' + err.message, 'error');
+        return;
+      }
+
+      const display = email.replace(/(.{2})[^@]+(@.+)/, '$1••••$2');
+      document.getElementById('otpEmailDisplay').textContent = display;
+
+      document.getElementById('otpFormWrap').style.display = 'block';
+      document.getElementById('otpSuccess').classList.remove('show');
+      document.getElementById('otpError').textContent = '';
+      clearOtpInputs();
+
+      document.getElementById('otpModal').classList.add('open');
+      showToast('Verification code sent! Check your inbox 📧', 'success');
+      startOtpTimer();
+
+      setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 350);
+    }
+
+    function closeOtp() {
+      document.getElementById('otpModal').classList.remove('open');
+      clearInterval(_otpTimerInterval);
+    }
+
+    function clearOtpInputs() {
+      document.querySelectorAll('.otp-digit').forEach(inp => {
+        inp.value = '';
+        inp.classList.remove('filled', 'shake');
+      });
+    }
+
+    function startOtpTimer(seconds = 30) {
+      const btn = document.getElementById('otpResendBtn');
+      btn.disabled = true;
+      btn.innerHTML = 'Resend in <span class="otp-timer" id="otpTimerDisplay">' + seconds + 's</span>';
+      clearInterval(_otpTimerInterval);
+      let remaining = seconds;
+      _otpTimerInterval = setInterval(() => {
+        remaining--;
+        const el = document.getElementById('otpTimerDisplay');
+        if (el) el.textContent = remaining + 's';
+        if (remaining <= 0) {
+          clearInterval(_otpTimerInterval);
+          btn.disabled = false;
+          btn.textContent = 'Resend Code';
+        }
+      }, 1000);
+    }
+
+    async function resendOtp() {
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email: _otpEmail,
+          options: { shouldCreateUser: true }
+        });
+        if (error) { showToast('Could not resend code: ' + error.message, 'error'); return; }
+      } catch (err) { showToast('Could not resend code: ' + err.message, 'error'); return; }
+      clearOtpInputs();
+      document.getElementById('otpError').textContent = '';
+      showToast('New code sent! Check your inbox 📧', 'success');
+      startOtpTimer();
+      setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 100);
+    }
+
+    async function verifyOtp() {
+      const digits = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+      const errEl = document.getElementById('otpError');
+
+      if (digits.length < 6) {
+        errEl.textContent = 'Please enter all 6 digits.';
+        shakeOtpInputs(); return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.verifyOtp({
+          email: _otpEmail,
+          token: digits,
+          type: 'email'
+        });
+        if (error) {
+          errEl.textContent = 'Incorrect code. Please try again.';
+          shakeOtpInputs();
+          clearOtpInputs();
+          setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 100);
+          return;
+        }
+
+        // ✅ Verified
+        errEl.textContent = '';
+        clearInterval(_otpTimerInterval);
+        document.getElementById('otpFormWrap').style.display = 'none';
+        document.getElementById('otpSuccess').classList.add('show');
+        setTimeout(() => { closeOtp(); finaliseAccount(); }, 1200);
+      } catch (err) {
+        errEl.textContent = 'Verification failed: ' + err.message;
+        shakeOtpInputs();
+      }
+    }
+
+    function shakeOtpInputs() {
+      document.querySelectorAll('.otp-digit').forEach(inp => {
+        inp.classList.remove('shake');
+        void inp.offsetWidth;
+        inp.classList.add('shake');
+      });
+    }
+
+    /* ── OTP keyboard wiring ── */
+    document.addEventListener('DOMContentLoaded', function () {
+      const digits = document.querySelectorAll('.otp-digit');
+      digits.forEach((inp, idx) => {
+        inp.addEventListener('input', function () {
+          const val = this.value.replace(/\D/g, '');
+          this.value = val ? val[val.length - 1] : '';
+          this.classList.toggle('filled', !!this.value);
+          document.getElementById('otpError').textContent = '';
+          if (this.value && idx < digits.length - 1) digits[idx + 1].focus();
+        });
+
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Backspace' && !this.value && idx > 0) {
+            digits[idx - 1].value = '';
+            digits[idx - 1].classList.remove('filled');
+            digits[idx - 1].focus();
+          }
+          if (e.key === 'ArrowLeft' && idx > 0) digits[idx - 1].focus();
+          if (e.key === 'ArrowRight' && idx < digits.length - 1) digits[idx + 1].focus();
+        });
+
+        inp.addEventListener('paste', function (e) {
+          e.preventDefault();
+          const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+          paste.split('').forEach((ch, i) => {
+            if (digits[i]) { digits[i].value = ch; digits[i].classList.add('filled'); }
+          });
+          if (digits[Math.min(paste.length, digits.length - 1)]) digits[Math.min(paste.length, digits.length - 1)].focus();
+        });
+      });
+    });
+
+    updateStepUI(1);
+  </script>
+
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

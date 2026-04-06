@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORPHEUS — Home</title>
+  <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="home_theme.css">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+  <!--
+    sidebar.js injects the topbar (<nav id="topNav">) automatically at the
+    top of <body>, and injects <aside id="sidebar"> as the first child of
+    .main-layout. No hardcoded <header> or <aside> needed here.
+  -->
+
+  <div class="main-layout">
+
+    <!-- ══ PAGE BODY ══ -->
+    <main class="page-body">
+      <div class="content">
+        <!-- BANNER -->
+        <div class="welcome-banner">
+          <div class="wb-glow1"></div>
+          <div class="wb-glow2"></div>
+          <div class="wb-accent-bar"></div>
+          <div class="welcome-text">
+            <h2 id="greetingHeading"></h2>
+            <p id="greetingSubtitle"></p>
+            <button class="wb-btn">🎵 Start Listening</button>
+          </div>
+          <div class="banner-stats">
+            <div class="stat-item"><span class="stat-num" id="statTracks">—</span><span class="stat-lbl">Tracks</span>
+            </div>
+            <div class="stat-item"><span class="stat-num" id="statArtists">—</span><span class="stat-lbl">Artists</span>
+            </div>
+            <div class="stat-item"><span class="stat-num" id="statAlbums">—</span><span class="stat-lbl">Albums</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs-panel">
+          <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('trending',this)">TRENDING</button>
+            <button class="tab-btn" onclick="switchTab('recommended',this)">RANDOM</button>
+            <button class="tab-btn" onclick="switchTab('playlist',this)">PLAYLIST</button>
+          </div>
+          <div class="tab-content">
+            <div class="tab-pane active" id="trending">
+              <div class="track-list" id="trending-list">
+                <div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Loading trending songs…</div>
+              </div>
+            </div>
+            <div class="tab-pane" id="recommended">
+              <div class="track-list" id="random-list">
+                <div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Loading random songs…</div>
+              </div>
+            </div>
+            <div class="tab-pane" id="playlist">
+              <div class="playlist-grid" id="playlist-grid">
+                <div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Loading playlists…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP ARTISTS -->
+        <div class="artists-section">
+          <div class="section-header">
+            <span class="section-title">Top Artists</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <!-- COUNTRY DROPDOWN -->
+              <div class="custom-dropdown" id="countryDrop">
+                <div class="dropdown-trigger" id="countryTrigger" onclick="toggleCountryMenu()">
+                  <span class="dt-flag" id="dtFlag">🌐</span>
+                  <span class="dt-text">
+                    <span class="dt-main" id="dtMain">Global</span>
+                    <span class="dt-sub" id="dtSub">Worldwide</span>
+                  </span>
+                  <span class="dt-chevron">▼</span>
+                </div>
+                <div class="country-menu" id="countryMenu">
+
+                  <div class="cm-search-wrap">
+                    <span class="cm-search-icon">🔍</span>
+                    <input type="text" class="cm-search-input" id="countrySearch" placeholder="Search countries…"
+                      oninput="filterCountries(this.value)" autocomplete="off">
+                  </div>
+
+                  <div class="cm-region-lbl">🌍 Global</div>
+                  <div class="cm-option selected" data-code="global" data-flag="🌐" data-name="Global"
+                    data-sub="Worldwide" onclick="selectCountry(this)">
+                    <span class="cm-flag">🌐</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Global</div>
+                      <div class="cm-type">Worldwide</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-divider"></div>
+
+                  <div class="cm-region-lbl">🌎 The Americas</div>
+                  <div class="cm-option" data-code="us" data-flag="🇺🇸" data-name="United States"
+                    data-sub="North America" onclick="selectCountry(this)">
+                    <span class="cm-flag">🇺🇸</span>
+                    <div class="cm-info">
+                      <div class="cm-name">United States</div>
+                      <div class="cm-type">North America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ca" data-flag="🇨🇦" data-name="Canada" data-sub="North America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇦</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Canada</div>
+                      <div class="cm-type">North America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="br" data-flag="🇧🇷" data-name="Brazil" data-sub="South America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇧🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Brazil</div>
+                      <div class="cm-type">South America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="mx" data-flag="🇲🇽" data-name="Mexico" data-sub="Latin America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇲🇽</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Mexico</div>
+                      <div class="cm-type">Latin America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ar" data-flag="🇦🇷" data-name="Argentina" data-sub="South America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇦🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Argentina</div>
+                      <div class="cm-type">South America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="co" data-flag="🇨🇴" data-name="Colombia" data-sub="South America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇴</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Colombia</div>
+                      <div class="cm-type">South America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="cl" data-flag="🇨🇱" data-name="Chile" data-sub="South America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇱</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Chile</div>
+                      <div class="cm-type">South America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="pe" data-flag="🇵🇪" data-name="Peru" data-sub="South America"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇵🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Peru</div>
+                      <div class="cm-type">South America</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-divider"></div>
+
+                  <div class="cm-region-lbl">🌍 Europe</div>
+                  <div class="cm-option" data-code="gb" data-flag="🇬🇧" data-name="United Kingdom" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇬🇧</span>
+                    <div class="cm-info">
+                      <div class="cm-name">United Kingdom</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="de" data-flag="🇩🇪" data-name="Germany" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇩🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Germany</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="fr" data-flag="🇫🇷" data-name="France" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇫🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">France</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="it" data-flag="🇮🇹" data-name="Italy" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇮🇹</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Italy</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="es" data-flag="🇪🇸" data-name="Spain" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇪🇸</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Spain</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="nl" data-flag="🇳🇱" data-name="Netherlands" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇳🇱</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Netherlands</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="se" data-flag="🇸🇪" data-name="Sweden" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇸🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Sweden</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="no" data-flag="🇳🇴" data-name="Norway" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇳🇴</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Norway</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="dk" data-flag="🇩🇰" data-name="Denmark" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇩🇰</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Denmark</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="pl" data-flag="🇵🇱" data-name="Poland" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇵🇱</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Poland</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ru" data-flag="🇷🇺" data-name="Russia" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇷🇺</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Russia</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="pt" data-flag="🇵🇹" data-name="Portugal" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇵🇹</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Portugal</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="be" data-flag="🇧🇪" data-name="Belgium" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇧🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Belgium</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ch" data-flag="🇨🇭" data-name="Switzerland" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇭</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Switzerland</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="at" data-flag="🇦🇹" data-name="Austria" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇦🇹</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Austria</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="gr" data-flag="🇬🇷" data-name="Greece" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇬🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Greece</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="fi" data-flag="🇫🇮" data-name="Finland" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇫🇮</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Finland</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ro" data-flag="🇷🇴" data-name="Romania" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇷🇴</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Romania</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ua" data-flag="🇺🇦" data-name="Ukraine" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇺🇦</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Ukraine</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="cz" data-flag="🇨🇿" data-name="Czech Republic" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇿</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Czech Republic</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="hu" data-flag="🇭🇺" data-name="Hungary" data-sub="Europe"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇭🇺</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Hungary</div>
+                      <div class="cm-type">Europe</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-divider"></div>
+
+                  <div class="cm-region-lbl">🌏 Asia Pacific</div>
+                  <div class="cm-option" data-code="jp" data-flag="🇯🇵" data-name="Japan" data-sub="East Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇯🇵</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Japan</div>
+                      <div class="cm-type">East Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="kr" data-flag="🇰🇷" data-name="South Korea" data-sub="East Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇰🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">South Korea</div>
+                      <div class="cm-type">East Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="cn" data-flag="🇨🇳" data-name="China" data-sub="East Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇨🇳</span>
+                    <div class="cm-info">
+                      <div class="cm-name">China</div>
+                      <div class="cm-type">East Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="in" data-flag="🇮🇳" data-name="India" data-sub="South Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇮🇳</span>
+                    <div class="cm-info">
+                      <div class="cm-name">India</div>
+                      <div class="cm-type">South Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="id" data-flag="🇮🇩" data-name="Indonesia" data-sub="Southeast Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇮🇩</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Indonesia</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ph" data-flag="🇵🇭" data-name="Philippines"
+                    data-sub="Southeast Asia" onclick="selectCountry(this)">
+                    <span class="cm-flag">🇵🇭</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Philippines</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="th" data-flag="🇹🇭" data-name="Thailand" data-sub="Southeast Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇹🇭</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Thailand</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="vn" data-flag="🇻🇳" data-name="Vietnam" data-sub="Southeast Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇻🇳</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Vietnam</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="my" data-flag="🇲🇾" data-name="Malaysia" data-sub="Southeast Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇲🇾</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Malaysia</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="sg" data-flag="🇸🇬" data-name="Singapore" data-sub="Southeast Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇸🇬</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Singapore</div>
+                      <div class="cm-type">Southeast Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="pk" data-flag="🇵🇰" data-name="Pakistan" data-sub="South Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇵🇰</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Pakistan</div>
+                      <div class="cm-type">South Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="bd" data-flag="🇧🇩" data-name="Bangladesh" data-sub="South Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇧🇩</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Bangladesh</div>
+                      <div class="cm-type">South Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="lk" data-flag="🇱🇰" data-name="Sri Lanka" data-sub="South Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇱🇰</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Sri Lanka</div>
+                      <div class="cm-type">South Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="np" data-flag="🇳🇵" data-name="Nepal" data-sub="South Asia"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇳🇵</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Nepal</div>
+                      <div class="cm-type">South Asia</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="au" data-flag="🇦🇺" data-name="Australia" data-sub="Oceania"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇦🇺</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Australia</div>
+                      <div class="cm-type">Oceania</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="nz" data-flag="🇳🇿" data-name="New Zealand" data-sub="Oceania"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇳🇿</span>
+                    <div class="cm-info">
+                      <div class="cm-name">New Zealand</div>
+                      <div class="cm-type">Oceania</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-divider"></div>
+
+                  <div class="cm-region-lbl">🌍 Middle East &amp; Africa</div>
+                  <div class="cm-option" data-code="sa" data-flag="🇸🇦" data-name="Saudi Arabia" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇸🇦</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Saudi Arabia</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ae" data-flag="🇦🇪" data-name="UAE" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇦🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">UAE</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="tr" data-flag="🇹🇷" data-name="Turkey" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇹🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Turkey</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="il" data-flag="🇮🇱" data-name="Israel" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇮🇱</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Israel</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="eg" data-flag="🇪🇬" data-name="Egypt" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇪🇬</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Egypt</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ir" data-flag="🇮🇷" data-name="Iran" data-sub="Middle East"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇮🇷</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Iran</div>
+                      <div class="cm-type">Middle East</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ng" data-flag="🇳🇬" data-name="Nigeria" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇳🇬</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Nigeria</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="za" data-flag="🇿🇦" data-name="South Africa" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇿🇦</span>
+                    <div class="cm-info">
+                      <div class="cm-name">South Africa</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="gh" data-flag="🇬🇭" data-name="Ghana" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇬🇭</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Ghana</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ke" data-flag="🇰🇪" data-name="Kenya" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇰🇪</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Kenya</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="ma" data-flag="🇲🇦" data-name="Morocco" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇲🇦</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Morocco</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+                  <div class="cm-option" data-code="sn" data-flag="🇸🇳" data-name="Senegal" data-sub="Africa"
+                    onclick="selectCountry(this)">
+                    <span class="cm-flag">🇸🇳</span>
+                    <div class="cm-info">
+                      <div class="cm-name">Senegal</div>
+                      <div class="cm-type">Africa</div>
+                    </div><span class="cm-check">✓</span>
+                  </div>
+
+                </div>
+              </div><!-- /country dropdown -->
+
+              <div class="nav-arrows">
+                <button class="arrow-btn" onclick="scrollRow('topArtists',-1)">&#8592;</button>
+                <button class="arrow-btn" onclick="scrollRow('topArtists', 1)">&#8594;</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Artist row — populated by JS -->
+          <div class="artist-row" id="topArtists"></div>
+        </div>
+
+        <!-- CURRENT ARTISTS (from DB) -->
+        <div class="artists-section">
+          <div class="section-header">
+            <span class="section-title">Current Artists</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="see-all-btn" onclick="window.location.href='all-artists.html'">See all →</button>
+              <div class="nav-arrows">
+                <button class="arrow-btn" onclick="scrollRow('dbArtists',-1)">&#8592;</button>
+                <button class="arrow-btn" onclick="scrollRow('dbArtists', 1)">&#8594;</button>
+              </div>
+            </div>
+          </div>
+          <div class="artist-row" id="dbArtists">
+            <div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Loading artists…</div>
+          </div>
+        </div>
+
+        <!-- ALBUMS -->
+        <div class="albums-section">
+          <div class="section-header">
+            <span class="section-title">Popular Albums</span>
+            <button class="see-all-btn" onclick="window.location.href='Ep singles.html'">EP & Singles →</button>
+          </div>
+          <div class="albums-grid" id="albums-grid"
+            style="grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(3,auto);">
+            <div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;grid-column:1/-1;text-align:center">
+              Loading albums…</div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div><!-- /.main-layout -->
+
+  <!-- ══════════════════════════════════════════
+       EP & SINGLES OVERLAY — shown when user
+       clicks "See all →" on Popular Albums
+       ══════════════════════════════════════════ -->
+  <div id="epSinglesOverlay" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:200;
+    overflow-y:auto;
+    background:var(--bg-primary,#0e1923);
+  ">
+    <div style="max-width:1400px;margin:0 auto;padding:32px 28px 120px;">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">
+        <button id="epBackBtn" style="
+          display:flex;align-items:center;gap:8px;
+          background:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.1);
+          border-radius:10px;
+          color:rgba(191,201,209,0.85);
+          font-family:'Space Grotesk',sans-serif;
+          font-size:.82rem;font-weight:500;
+          padding:8px 16px;cursor:pointer;
+          flex-shrink:0;
+        ">← Back</button>
+
+        <div style="flex:1;">
+          <h1 style="
+            font-family:'Orbitron',sans-serif;
+            font-size:2rem;font-weight:900;
+            letter-spacing:.08em;margin:0 0 2px;
+            text-transform:uppercase;
+            background:linear-gradient(90deg,#FF9B51 0%,#ffcf9b 50%,#FF9B51 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+          ">EP &amp; Single</h1>
+          <p style="
+            font-family:'Space Grotesk',sans-serif;
+            font-size:.82rem;color:rgba(191,201,209,.5);
+            letter-spacing:.05em;margin:0;
+          ">Releases with a single track</p>
+        </div>
+
+        <span id="epCountBadge" style="
+          font-family:'Space Grotesk',sans-serif;
+          font-size:.78rem;font-weight:600;
+          background:linear-gradient(135deg,#FF9B51,#c06020);
+          color:#fff;border-radius:20px;padding:4px 14px;
+          letter-spacing:.04em;flex-shrink:0;display:none;
+        "></span>
+      </div>
+
+      <!-- Divider -->
+      <div
+        style="height:1px;background:linear-gradient(90deg,rgba(255,155,81,.5),rgba(255,255,255,.06),transparent);margin-bottom:28px;">
+      </div>
+
+      <!-- Grid -->
+      <div id="epGrid" style="
+        display:grid;
+        grid-template-columns:repeat(6,1fr);
+        gap:16px;
+      "></div>
+
+    </div>
+  </div>
+
+  <style>
+    .ep-card {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      aspect-ratio: 1/1;
+      cursor: pointer;
+      transition: transform .22s ease, box-shadow .22s ease;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+    }
+
+    .ep-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
+    }
+
+    .ep-card img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ep-card-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 28px 10px 10px;
+      background: linear-gradient(to top, rgba(0, 0, 0, .82) 0%, transparent 100%);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, .92);
+      text-align: center;
+      letter-spacing: .02em;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .ep-single-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 155, 81, .92);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      padding: 2px 7px;
+      border-radius: 8px;
+      text-transform: uppercase;
+    }
+
+    @keyframes ep-shimmer {
+      0% {
+        background-position: -400px 0
+      }
+
+      100% {
+        background-position: 400px 0
+      }
+    }
+
+    .ep-skeleton {
+      border-radius: 14px;
+      aspect-ratio: 1/1;
+      background: linear-gradient(90deg, rgba(255, 255, 255, .04) 25%, rgba(255, 255, 255, .10) 50%, rgba(255, 255, 255, .04) 75%);
+      background-size: 800px 100%;
+      animation: ep-shimmer 1.4s infinite linear;
+    }
+
+    @media(max-width:1100px) {
+      #epGrid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+    }
+
+    @media(max-width:750px) {
+      #epGrid {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+    }
+
+    @media(max-width:500px) {
+      #epGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+  </style>
+
+    /* =====================================================
+       SHARED SUPABASE CONFIG (centralised in supabase.js)
+       ===================================================== */
+    const _TAB_SB_URL = SUPABASE_URL;
+    const _TAB_SB_KEY = SUPABASE_KEY;
+
+    const _TAB_HEADERS = {
+      'apikey': _TAB_SB_KEY,
+      'Authorization': `Bearer ${_TAB_SB_KEY}`,
+      'Accept': 'application/json'
+    };
+
+    /* helper: format seconds → m:ss */
+    function _fmtDur(sec) {
+      if (!sec || !isFinite(sec)) return '—';
+      const m = Math.floor(sec / 60), s = Math.round(sec % 60);
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    /* gradient palette for track thumbnails */
+    const _GRADS = [
+      ['#FF9B51', '#e8691e'], ['#e07840', '#c05820'], ['#25343F', '#3a5060'],
+      ['#d07030', '#a05020'], ['#BFC9D1', '#8a9aaa'], ['#FF9B51', '#c06830'],
+      ['#2e4555', '#1a2e3a'], ['#e88840', '#b86020'], ['#95a8b5', '#6a8090'],
+      ['#384f5e', '#253440']
+    ];
+
+    function _trackThumb(idx, emoji) {
+      const [c1, c2] = _GRADS[idx % _GRADS.length];
+      return `<div class="track-thumb" style="background:linear-gradient(135deg,${c1},${c2})">${emoji}</div>`;
+    }
+
+    /* render a list of song rows into a .track-list container */
+    function _renderTrackRows(songs, container, emoji) {
+      const _GRADS_T = [
+        ['#FF9B51', '#e8691e'], ['#e07840', '#c05820'], ['#25343F', '#3a5060'],
+        ['#d07030', '#a05020'], ['#BFC9D1', '#8a9aaa'], ['#FF9B51', '#c06830'],
+        ['#2e4555', '#1a2e3a'], ['#e88840', '#b86020'], ['#95a8b5', '#6a8090'],
+        ['#384f5e', '#253440']
+      ];
+      container.innerHTML = DOMPurify.sanitize(songs.map((s, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? 'track-rank top3' : 'track-rank';
+        const [c1, c2] = _GRADS_T[i % _GRADS_T.length];
+        const thumbInner = s.cover_url
+          ? `<img src="${s.cover_url}" alt="${s.title || ''}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"
+               onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,${c1},${c2})';">`
+          : emoji;
+        const thumbStyle = s.cover_url
+          ? `border-radius:6px;overflow:hidden;`
+          : `background:linear-gradient(135deg,${c1},${c2});`;
+        return `
+        <div class="track-item" data-song-id="${s.id || ''}" data-song-title="${(s.title || '').replace(/"/g, '&quot;')}" data-song-artist="${(s.artist || '').replace(/"/g, '&quot;')}">
+          <span class="${rankClass}">${rank}</span>
+          <div class="track-thumb" style="${thumbStyle}">${thumbInner}</div>
+          <div class="track-info">
+            <div class="track-title">${s.title || 'Untitled'}</div>
+            <div class="track-artist"><a class="artist-link" href="playing.html?artist=${encodeURIComponent(s.artist || 'Unknown Artist')}" title="View ${s.artist || 'Unknown Artist'}">${s.artist || 'Unknown Artist'}</a></div>
+          </div>
+          <span class="track-duration">${_fmtDur(s.duration_sec)}</span>
+          <button class="play-btn">▶</button>
+        </div>`;
+      }).join(''), {ADD_ATTR: ['onclick', 'onerror', 'style']});
+    }
+
+    /* Wire every .track-item inside a container to OrpheusPlayer.
+       Clicking anywhere on the row (except the artist link) plays the song.
+       Matches by song id first, then falls back to title + artist. */
+    function _wirePlayButtons(container) {
+      container.querySelectorAll('.track-item').forEach(item => {
+        // Make entire row clickable
+        item.style.cursor = 'pointer';
+
+        function triggerPlay(e) {
+          // Don't intercept clicks on the artist link
+          if (e.target.closest('.artist-link')) return;
+          e.stopPropagation();
+
+          const songId = item.dataset.songId;
+          const songTitle = item.dataset.songTitle;
+          const songArtist = item.dataset.songArtist;
+
+          function findAndPlay(songs) {
+            let idx = -1;
+            if (songId) idx = songs.findIndex(s => String(s.id) === String(songId));
+            if (idx === -1) idx = songs.findIndex(s => s.title === songTitle && s.artist === songArtist);
+            if (idx === -1) idx = songs.findIndex(s => s.title === songTitle);
+            if (idx !== -1) {
+              window.OrpheusPlayer.play(idx);
+            } else {
+              console.warn('Orpheus: song not found in player catalogue:', songTitle);
+            }
+          }
+
+          if (window.OrpheusPlayer) {
+            window.OrpheusPlayer.getSongs(findAndPlay);
+          } else {
+            window.addEventListener('orpheus:songsLoaded', (ev) => findAndPlay(ev.detail.songs), { once: true });
+          }
+        }
+
+        // Wire the whole row
+        item.addEventListener('click', triggerPlay);
+
+        // Also wire the explicit play button (stopPropagation so it doesn't fire twice)
+        const btn = item.querySelector('.play-btn');
+        if (btn) {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            triggerPlay(e);
+          });
+        }
+      });
+    }
+
+    /* =====================================================
+       TRENDING — top 10 songs ordered by trending_priority
+       ===================================================== */
+    (async function loadTrending() {
+      const list = document.getElementById('trending-list');
+      try {
+        const res = await fetch(
+          `${_TAB_SB_URL}/rest/v1/songs?select=id,title,artist,duration_sec,cover_url&trending_priority=not.is.null&order=trending_priority.asc&limit=10`,
+          { headers: _TAB_HEADERS }
+        );
+        if (!res.ok) throw new Error('Trending fetch failed');
+        const songs = await res.json();
+
+        if (!songs.length) {
+          list.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">No trending songs found.</div>';
+          return;
+        }
+        _renderTrackRows(songs, list, '🎵');
+        _wirePlayButtons(list);
+      } catch (err) {
+        console.error('Trending load error:', err);
+        list.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Could not load trending songs.</div>';
+      }
+    })();
+
+    /* =====================================================
+       RANDOM — 10 random songs (with cover images) from
+       the entire songs table
+       ===================================================== */
+
+    /* Render track rows with real cover_url images for the Random tab */
+    function _renderRandomRows(songs, container) {
+      const _GRADS_R = [
+        ['#FF9B51', '#e8691e'], ['#e07840', '#c05820'], ['#25343F', '#3a5060'],
+        ['#d07030', '#a05020'], ['#BFC9D1', '#8a9aaa'], ['#FF9B51', '#c06830'],
+        ['#2e4555', '#1a2e3a'], ['#e88840', '#b86020'], ['#95a8b5', '#6a8090'],
+        ['#384f5e', '#253440']
+      ];
+      container.innerHTML = DOMPurify.sanitize(songs.map((s, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? 'track-rank top3' : 'track-rank';
+        const [c1, c2] = _GRADS_R[i % _GRADS_R.length];
+        const thumbInner = s.cover_url
+          ? `<img src="${s.cover_url}" alt="${s.title || ''}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"
+               onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,${c1},${c2})';">`
+          : '🎶';
+        const thumbStyle = s.cover_url
+          ? `border-radius:6px;overflow:hidden;`
+          : `background:linear-gradient(135deg,${c1},${c2});`;
+        return `
+        <div class="track-item" data-song-id="${s.id || ''}" data-song-title="${(s.title || '').replace(/"/g, '&quot;')}" data-song-artist="${(s.artist || '').replace(/"/g, '&quot;')}">
+          <span class="${rankClass}">${rank}</span>
+          <div class="track-thumb" style="${thumbStyle}">${thumbInner}</div>
+          <div class="track-info">
+            <div class="track-title">${s.title || 'Untitled'}</div>
+            <div class="track-artist"><a class="artist-link" href="playing.html?artist=${encodeURIComponent(s.artist || 'Unknown Artist')}" title="View ${s.artist || 'Unknown Artist'}">${s.artist || 'Unknown Artist'}</a></div>
+          </div>
+          <span class="track-duration">${_fmtDur(s.duration_sec)}</span>
+          <button class="play-btn">▶</button>
+        </div>`;
+      }).join(''), {ADD_ATTR: ['onclick', 'onerror', 'style']});
+    }
+
+    (async function loadRandom() {
+      const list = document.getElementById('random-list');
+      try {
+        /* Fetch a larger pool then pick 10 at random client-side.
+           Supabase REST doesn't expose ORDER BY RANDOM(), so we
+           grab up to 200 rows and shuffle locally. */
+        const res = await fetch(
+          `${_TAB_SB_URL}/rest/v1/songs?select=id,title,artist,duration_sec,cover_url&limit=200`,
+          { headers: _TAB_HEADERS }
+        );
+        if (!res.ok) throw new Error('Random fetch failed');
+        const all = await res.json();
+
+        if (!all.length) {
+          list.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">No songs found.</div>';
+          return;
+        }
+
+        /* Fisher-Yates shuffle, then take 10 */
+        for (let i = all.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [all[i], all[j]] = [all[j], all[i]];
+        }
+        const songs = all.slice(0, 10);
+        _renderRandomRows(songs, list);
+        _wirePlayButtons(list);
+      } catch (err) {
+        console.error('Random load error:', err);
+        list.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Could not load songs.</div>';
+      }
+    })();
+
+    /* =====================================================
+       DYNAMIC PLAYLISTS — derived from songs.playlist column
+       Cover images come from playlists_icons table (matched by name).
+       Clicking a card navigates to playing.html?playlist=<n>
+       ===================================================== */
+    (async function loadPlaylists() {
+      const grid = document.getElementById('playlist-grid');
+
+      try {
+        // 1. Fetch all songs that have a playlist tag
+        const songsRes = await fetch(
+          `${_TAB_SB_URL}/rest/v1/songs?select=playlist&playlist=not.is.null`,
+          { headers: _TAB_HEADERS }
+        );
+        if (!songsRes.ok) throw new Error('Songs playlist fetch failed');
+        const songRows = await songsRes.json();
+
+        // Deduplicate playlist names + count songs per playlist
+        const playlistMap = {};
+        songRows.forEach(r => {
+          const name = (r.playlist || '').trim();
+          if (!name) return;
+          playlistMap[name] = (playlistMap[name] || 0) + 1;
+        });
+        const playlistNames = Object.keys(playlistMap).sort();
+
+        if (!playlistNames.length) {
+          grid.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;grid-column:1/-1;text-align:center">No playlists found.</div>';
+          return;
+        }
+
+        // 2. Fetch cover icons from playlists_icons table
+        const iconsRes = await fetch(
+          `${_TAB_SB_URL}/rest/v1/playlists_icons?select=name,cover_url`,
+          { headers: _TAB_HEADERS }
+        );
+        const iconRows = iconsRes.ok ? await iconsRes.json() : [];
+
+        // Build name -> cover_url lookup (case-insensitive)
+        const iconMap = {};
+        iconRows.forEach(r => {
+          if (r.name) iconMap[r.name.trim().toLowerCase()] = r.cover_url || null;
+        });
+
+        // Gradient fallback palette
+        const GRAD_COLORS = [
+          ['#FF9B51', '#c06020'], ['#25343F', '#3a5060'], ['#2e4455', '#1a2e3a'],
+          ['#e07830', '#a04c18'], ['#6a4c93', '#3d2060'], ['#1a4a2a', '#0d2a18'],
+          ['#354e5e', '#1e3040'], ['#e53935', '#8a1a18'], ['#283593', '#101d5e'],
+          ['#3a6080', '#1a3a54'], ['#c86820', '#8a4010'], ['#4a2040', '#2a0f25'],
+        ];
+
+        // 3. Render playlist cards
+        grid.innerHTML = DOMPurify.sanitize(playlistNames.map((name, i) => {
+          const coverUrl = iconMap[name.toLowerCase()] || null;
+          const songCount = playlistMap[name];
+          const [c1, c2] = GRAD_COLORS[i % GRAD_COLORS.length];
+          const meta = songCount === 1 ? '1 song' : `${songCount} songs`;
+
+          return `
+          <div class="playlist-card" style="--c1:${c1};--c2:${c2};cursor:pointer;"
+               onclick="window.location.href='playing.html?playlist=${encodeURIComponent(name)}'">
+            <div class="playlist-cover" style="background:linear-gradient(135deg,${c1},${c2});position:relative;">
+              ${coverUrl
+              ? `<img src="${coverUrl}" alt="${name}"
+                        style="width:100%;height:100%;object-fit:cover;border-radius:inherit;position:absolute;top:0;left:0;"
+                        onerror="this.style.display='none'">`
+              : '<span class="playlist-icon">🎵</span>'
+            }
+              <div class="playlist-overlay"><button class="play-btn-large">&#9654;</button></div>
+            </div>
+            <div class="playlist-info">
+              <div class="playlist-name">${name}</div>
+              <div class="playlist-meta">${meta}</div>
+            </div>
+          </div>`;
+        }).join(''), {ADD_ATTR: ['onclick', 'onerror', 'style']});
+
+      } catch (err) {
+        console.error('Playlist load error:', err);
+        grid.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Could not load playlists.</div>';
+      }
+    })();
+  </script>
+
+  <!-- sidebar.js: injects topbar + sidebar, avatar click -> profile.html, night mode -->
+  <script src="sidebar.js"></script>
+  <script src="player.js"></script>
+
+  <script>
+    /* =====================================================
+       DYNAMIC ALBUMS — fetch albums, split by song count
+       Popular Albums grid → albums with > 1 song (max 18, 6×3)
+       "See all →" button  → opens EP & Singles overlay (inline)
+       ===================================================== */
+    (async function loadAlbums() {
+      /* Credentials from supabase.js globals (SUPABASE_URL, SUPABASE_KEY) */
+      const grid = document.getElementById('albums-grid');
+      const overlay = document.getElementById('epSinglesOverlay');
+      const epGrid = document.getElementById('epGrid');
+      const epBadge = document.getElementById('epCountBadge');
+      const epBackBtn = document.getElementById('epBackBtn');
+      const seeAllBtn = document.querySelector('.albums-section .see-all-btn');
+
+      const GRAD_COLORS = [
+        ['#FF9B51', '#c06020'], ['#25343F', '#3a5060'], ['#2e4455', '#1a2e3a'],
+        ['#e07830', '#a04c18'], ['#6a4c93', '#3d2060'], ['#1a4a2a', '#0d2a18'],
+        ['#354e5e', '#1e3040'], ['#e53935', '#8a1a18'], ['#283593', '#101d5e'],
+        ['#3a6080', '#1a3a54'], ['#c86820', '#8a4010'], ['#4a2040', '#2a0f25'],
+      ];
+
+      /* ── helpers ─────────────────────────────────────── */
+      function openEPOverlay(singleAlbums) {
+        // Show skeleton while rendering
+        epGrid.innerHTML = Array(12).fill('<div class="ep-skeleton"></div>').join('');
+        overlay.style.display = 'block';
+        overlay.scrollTop = 0;
+        document.body.style.overflow = 'hidden'; // prevent body scroll
+
+        if (!singleAlbums.length) {
+          epGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(191,201,209,.4);font-family:\'Space Grotesk\',sans-serif;font-size:.9rem;padding:60px 0;">No single-track releases found in the library.</div>';
+          return;
+        }
+
+        epBadge.textContent = singleAlbums.length + ' release' + (singleAlbums.length !== 1 ? 's' : '');
+        epBadge.style.display = '';
+
+        epGrid.innerHTML = DOMPurify.sanitize(singleAlbums.map(([albumName, coverUrl], i) => {
+          const [c1, c2] = GRAD_COLORS[i % GRAD_COLORS.length];
+          return `
+          <div class="ep-card" style="background:linear-gradient(135deg,${c1},${c2});" data-album="${albumName}">
+            ${coverUrl ? `<img src="${coverUrl}" alt="${albumName}" onerror="this.style.display='none'">` : ''}
+            <div class="ep-single-badge">Single</div>
+            <div class="ep-card-label">${albumName}</div>
+          </div>`;
+        }).join(''), {ADD_ATTR: ['onclick', 'onerror', 'style']});
+
+        epGrid.querySelectorAll('.ep-card').forEach(card => {
+          card.addEventListener('click', () => {
+            window.location.href = `playing.html?album=${encodeURIComponent(card.dataset.album)}`;
+          });
+        });
+      }
+
+      function closeEPOverlay() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+
+      // Back button
+      if (epBackBtn) epBackBtn.addEventListener('click', closeEPOverlay);
+      // Also close on Escape key
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEPOverlay(); });
+
+      /* ── fetch ───────────────────────────────────────── */
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/songs?select=album,cover_url&album=not.is.null&order=album.asc`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Accept': 'application/json' } }
+        );
+        if (!res.ok) throw new Error('DB fetch failed');
+        const rows = await res.json();
+
+        // Count songs per album
+        const albumMap = {};
+        rows.forEach(r => {
+          if (!r.album) return;
+          if (!albumMap[r.album]) albumMap[r.album] = { coverUrl: r.cover_url || null, count: 0 };
+          albumMap[r.album].count++;
+        });
+
+        const multiAlbums = []; // Popular Albums grid (> 1 song)
+        const singleAlbums = []; // EP & Singles overlay (= 1 song)
+
+        Object.entries(albumMap).forEach(([name, data]) => {
+          if (data.count > 1) multiAlbums.push([name, data.coverUrl]);
+          else singleAlbums.push([name, data.coverUrl]);
+        });
+
+        // Wire "See all →" → navigate to EP & Singles page
+        if (seeAllBtn) {
+          seeAllBtn.style.display = singleAlbums.length ? '' : 'none';
+          // Store data for the EP singles page to pick up
+          try { sessionStorage.setItem('orpheus_ep_singles', JSON.stringify(singleAlbums)); } catch (_) { }
+        }
+
+        /* ── Popular Albums grid (max 18) ── */
+        if (!multiAlbums.length) {
+          grid.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;grid-column:1/-1;text-align:center">No albums found. Add songs to your songs table in Supabase.</div>';
+          return;
+        }
+
+        grid.innerHTML = DOMPurify.sanitize(multiAlbums.slice(0, 18).map(([albumName, coverUrl], i) => {
+          const [c1, c2] = GRAD_COLORS[i % GRAD_COLORS.length];
+          return `<div class="album-card" style="background:linear-gradient(135deg,${c1},${c2});cursor:pointer" data-album="${albumName}">
+            ${coverUrl ? `<img src="${coverUrl}" alt="${albumName}" class="album-cover-img" onerror="this.style.display='none'">` : ''}
+            <span class="album-label">${albumName}</span>
+          </div>`;
+        }).join(''), {ADD_ATTR: ['onclick', 'onerror', 'style']});
+
+        grid.querySelectorAll('.album-card').forEach(card => {
+          card.addEventListener('click', () => {
+            window.location.href = `playing.html?album=${encodeURIComponent(card.dataset.album)}`;
+          });
+        });
+
+      } catch (err) {
+        console.error('Album load error:', err);
+        grid.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;grid-column:1/-1;text-align:center">Could not load albums.</div>';
+      }
+    })();
+  </script>
+
+  <script>
+    /* =====================================================
+       COUNTRY ARTIST DATA
+       ===================================================== */
+    const PALETTE = ['#FF9B51', '#25343F', '#3a6080', '#6a4c93', '#1a73e8',
+      '#e53935', '#2e7d32', '#e65100', '#6a1b9a', '#00838f',
+      '#c62828', '#0277bd', '#558b2f', '#4527a0', '#00695c',
+      '#d84315', '#283593', '#6d4c41', '#37474f', '#ad1457'];
+
+    function avatarColor(name) {
+      let h = 0;
+      for (const c of name) h = ((h << 5) - h) + c.charCodeAt(0);
+      return PALETTE[Math.abs(h) % PALETTE.length];
+    }
+
+    function initials(name) {
+      return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    const ARTISTS = {
+      global: ['Eminem', 'Drake', 'Kendrick Lamar', 'Travis Scott', '21 Savage', 'Future', 'J. Cole', 'Post Malone', 'Cardi B', 'The Weeknd', 'Lil Baby', 'Nicki Minaj', 'Doja Cat', 'SZA', 'Gunna', 'Polo G', 'Juice WRLD', 'NBA YoungBoy', 'Lil Durk', 'Roddy Ricch', 'DaBaby', 'Lil Uzi Vert', 'Migos', 'Offset', 'Quavo'],
+      us: ['Taylor Swift', 'Drake', 'Beyoncé', 'Eminem', 'Kendrick Lamar', 'Post Malone', 'Billie Eilish', 'Ariana Grande', 'The Weeknd', 'Bruno Mars', 'Travis Scott', 'Cardi B', 'Lil Baby', 'Nicki Minaj', 'Doja Cat', 'SZA', 'Future', 'J. Cole', '21 Savage', 'Gunna', 'Juice WRLD', 'Lil Uzi Vert', 'NBA YoungBoy', 'Lil Durk', 'Roddy Ricch'],
+      ca: ['Drake', 'The Weeknd', 'Justin Bieber', 'Celine Dion', 'Shawn Mendes', 'Tory Lanez', 'Arcade Fire', 'Feist', 'Michael Bublé', 'Alessia Cara', 'Grimes', 'Charlotte Day Wilson', 'NAV', 'PARTYNEXTDOOR', 'Daniel Caesar', 'Jessie Reyez', 'bbno$', 'bülow', 'dvsn', 'Roy Woods', 'Jazz Cartier', 'Pressa', 'Loud Luxury', 'Chromeo', 'Kaytranada'],
+      gb: ['Adele', 'Ed Sheeran', 'Harry Styles', 'Dua Lipa', 'Sam Smith', 'Coldplay', 'Stormzy', 'Dave', 'Central Cee', 'Jorja Smith', 'Charli XCX', 'Little Mix', 'Skepta', 'J Hus', 'Aitch', 'Mabel', 'Anne-Marie', 'Clean Bandit', 'Glass Animals', 'Rag\'n\'Bone Man', 'George Ezra', 'Lewis Capaldi', 'Bastille', 'The 1975', 'Wolf Alice'],
+      de: ['Capital Bra', 'Ufo361', 'Sido', 'Bushido', 'Kollegah', 'Farid Bang', 'Rin', 'Bausa', 'Luciano', 'RAF Camora', 'Bonez MC', 'Gzuz', 'Nimo', 'Cro', 'Casper', 'Marteria', 'Jan Delay', 'Rammstein', 'Tokio Hotel', 'AnnenMayKantereit', 'Milky Chance', 'Felix Jaehn', 'Robin Schulz', 'Mark Forster', 'Lena'],
+      fr: ['Aya Nakamura', 'Angèle', 'PNL', 'Damso', 'Ninho', 'Jul', 'Niska', 'Booba', 'SCH', 'Nekfeu', 'Orelsan', 'Vald', 'Lomepal', 'Hamza', 'Hatik', 'Dinos', 'PLK', 'Sofiane', 'Gradur', 'Freeze Corleone', 'Kekra', 'La Fouine', 'Maes', 'Zaho de Sagazan', 'Pomme'],
+      it: ['Blanco', 'Mahmood', 'Ultimo', 'Tiziano Ferro', 'Vasco Rossi', 'Ligabue', 'Caparezza', 'Elisa', 'Emma Marrone', 'Laura Pausini', 'Giorgia', 'Jovanotti', 'Negramaro', 'Salmo', 'Ghali', 'Marracash', 'Sfera Ebbasta', 'Fibra', 'Rosa Chemical', 'Sangiovanni', 'Madame', 'Ariete', 'Coez', 'Calcutta', 'Cosmo'],
+      es: ['Rosalía', 'Bad Bunny', 'Rauw Alejandro', 'Aitana', 'Pablo Alborán', 'Alejandro Sanz', 'David Bisbal', 'India Martínez', 'Morat', 'Ana Mena', 'Nil Moliner', 'Dvicio', 'Beret', 'Melendi', 'Estopa', 'Funambulista', 'C. Tangana', 'Bizarrap (ESP)', 'Dellafuente', 'La Oreja de Van Gogh', 'Hombres G', 'Jarabe de Palo', 'Bunbury', 'Fito y Fitipaldis', 'Vetusta Morla'],
+      nl: ['Martin Garrix', 'Tiësto', 'Afrojack', 'Hardwell', 'Armin van Buuren', 'Ferry Corsten', 'Nicky Romero', 'Laidback Luke', 'Yellow Claw', 'Bizzey', 'Frenna', 'Ronnie Flex', 'Boef', 'Broederliefde', 'Ali B', 'Typhoon', 'Sevn Alias', 'Josylvio', 'Rolf Sanchez', 'Eva Simons', 'DeWolff', 'Di-rect', 'Chef\'Special', 'Kensington', 'Douwe Bob'],
+      se: ['Avicii', 'Swedish House Mafia', 'Robyn', 'ABBA', 'Roxette', 'Tove Lo', 'Zara Larsson', 'Axwell', 'Alesso', 'Eric Prydz', 'First Aid Kit', 'Lykke Li', 'Basshunter', 'Kent', 'In Flames', 'Opeth', 'Ghost', 'Sabaton', 'Arch Enemy', 'The Hives', 'Refused', 'Meshuggah', 'Watain', 'Hammerfall', 'Europe'],
+      no: ['a-ha', 'Aurora', 'Kygo', 'Alan Walker', 'Marcus & Martinus', 'Dagny', 'Sigrid', 'Astrid S', 'Karpe', 'Lars Vaular', 'Röyksopp', 'Kari Bremnes', 'Susanne Sundfør', 'Half Brother', 'Madrugada', 'Turbonegro', 'Kaizers Orchestra', '22', 'Motorpsycho', 'Petter', 'Isah', 'Sondre Justad', 'Dagny', 'Bernhoft', 'Ylvis'],
+      dk: ['Lukas Graham', 'MØ', 'Christopher', 'Medina', 'Alphabeat', 'D-A-D', 'Agnes Obel', 'Jasmin Levy', 'Rasmus Walter', 'Sys Bjerre', 'Tobias Rahim', 'Thomas Helmig', 'Kim Larsen', 'Michael Learns to Rock', 'Aqua', 'Cartoons', 'Whigfield', 'Swan Lee', 'Malurt', 'Gasolin', 'Oh Land', 'Rangleklods', 'Trentemøller', 'Efterklang', 'Iceage'],
+      pl: ['Dawid Podsiadło', 'Sanah', 'Kwiat Jabłoni', 'Daria Zawiałow', 'Natalia Szroeder', 'Ralph Kaminski', 'Brodka', 'Kortez', 'Taco Hemingway', 'Young Leosia', 'Mata', 'Quebonafide', 'Zeus', 'Szpaku', 'Bedoes', 'Kukon', 'Tymek', 'Feis', 'Paluch', 'Białas', 'Pezet', 'Sokół', 'Łona & Webber', 'Otsochodzi', 'Tede'],
+      ru: ['Monetochka', 'IC3PEAK', 'Face', 'Morgenstern', 'Pharaoh', 'Lizer', 'Timati', 'Jah Khalib', 'Niletto', 'Skryptonite', 'Instasamka', 'Elena Temnikova', 'Polina Gagarina', 'Sergey Lazarev', 'Dima Bilan', 'Alla Pugacheva', 'Filipp Kirkorov', 'Valeria', 'Zemfira', 'Bi-2', 'Leningrad', 'Mumiy Troll', 'Splean', 'Shortparis', 't.A.T.u.'],
+      pt: ['Salvador Sobral', 'Ana Moura', 'Mariza', 'Fado Bicha', 'Carminho', 'Dino d\'Santiago', 'Buraka Som Sistema', 'David Carreira', 'Richie Campbell', 'Slow J', 'Plutonio', 'Dillaz', 'Valete', 'Piruka', 'Agir', 'Sónia Tavares', 'Blaya', 'Dealema', 'Boss AC', 'Fernando Daniel', 'Carolina Deslandes', 'Bárbara Bandeira', 'Diogo Piçarra', 'Wet Bed Gang', 'Sam the Kid'],
+      be: ['Angèle', 'Stromae', 'Roméo Elvis', 'Damso', 'Hamza', 'Hamza 21', 'Sofiane (BE)', 'Ninho (BE)', 'Habib Kateba', 'Lous and the Yakuza', 'Typh Barrow', 'Milow', 'Baloji', 'Compact Disk Dummies', 'dEUS', 'Goose', 'Girls in Hawaii', 'Puggy', 'Axelle Red', 'Plastic Bertrand', 'Jacques Brel (legacy)', 'Zap Mama', 'Machiavel', 'Triggerfinger', 'Brutus'],
+      ch: ['James Blunt (CH res)', 'Patrick Nuo', 'Stress', 'Makko', '7Days Crazy', 'Lo & Leduc', 'Stefanie Heinzmann', 'Bastian Baker', 'Dabu Fantastic', 'Patent Ochsner', 'Die Toten Hosen (CH leg)', 'Züri West', 'Span', 'Nicolas Senn', 'ManKind', 'Nemo', 'Joya Marleen', 'SDP', 'Laurin', 'Gimma', 'Dachs', 'Brandy Butler', 'Seven', 'Mich Gerber', 'Stahlberger'],
+      at: ['Falco', 'DJ Ötzi', 'Bilderbuch', 'Wanda', 'Camo & Krooked', 'Kruder & Dorfmeister', 'Soap&Skin', 'Soap & Skin', 'Christina Stürmer', 'Andreas Gabalier', 'Conchita Wurst', 'Parov Stelar', 'Mynth', 'Voodoo Jürgens', '5/8erl in Ehr\'n', 'Oehl', 'Mira Lu Kovacs', 'Dear Criminals', 'Farewell Dear Ghost', 'Ogris Debris', 'Lemo', 'Granada', 'Seiler und Speer', 'Kurt Ostbahn', 'Rosalia de Son'],
+      gr: ['Nikos Vertis', 'Giorgos Mazonakis', 'Helena Paparizou', 'Sakis Rouvas', 'Thodoris Kotonias', 'Anna Vissi', 'Antonis Remos', 'Despina Vandi', 'Natasha Theodoridou', 'Kostas Martakis', 'Peggy Zina', 'Eleftheria Arvanitaki', 'Christos Dantis', 'Notis Sfakianakis', 'Dimitra Galani', 'Vangelis Paradissis', 'Giorgos Tsalikis', 'Alkistis Protopsalti', 'Stelios Kazantzidis', 'Vicky Leandros', 'Marinella', 'Nana Mouskouri (global)', 'Grigoris Bithikotsis', 'Manolis Aggelopoulos', 'Markos Vamvakaris'],
+      fi: ['Nightwish', 'HIM', 'Children of Bodom', 'Sonata Arctica', 'Apocalyptica', 'Lordi', 'The Rasmus', 'Poets of the Fall', 'Amorphis', 'Wintersun', 'Siiri Nordin', 'Alma', 'Robin Packalen', 'Isac Elliot', 'Vesala', 'Jenni Vartiainen', 'Toni Wirtanen', 'Anna Puu', 'Yeboyah', 'Pyhimys', 'Anssi Kela', 'Paula Koivuniemi', 'Ismo Alanko', 'Leevi and the Leavings', 'Hanoi Rocks'],
+      ro: ['INNA', 'Alexandra Stan', 'Inna feat. Flo Rida', 'Antonia', 'Carla\'s Dreams', 'Smiley', 'Delia', 'Loredana Groza', 'CRBL', 'Puya', 'Doddy', 'Cabron', 'Cheloo', 'B.U.G. Mafia', 'La Familia', 'Sisu Tudor', 'Robin and The Backstabbers', 'Iris', 'Cargo', 'Phoenix', 'Holograf', 'Voltaj', 'Directia 5', 'Paraziții', 'Feli'],
+      ua: ['Okean Elzy', 'Ruslana', 'Jamala', 'Go_A', 'KAZKA', 'MONATIK', 'Время и Стекло', 'Pianoбой', 'The Hardkiss', 'Tina Karol', 'Tayanna', 'alyona alyona', 'ONUKA', 'Boombox', 'Вaкарчук', 'Max Barskih', 'Ivan Dorn', 'Антитіла', 'Скрябін', 'ВВ', 'Воплі Відоплясова', 'Сер Йосип', 'Stasik', 'Jerry Heil', 'Wellboy'],
+      cz: ['Lucie Bílá', 'Karel Gott', 'Michal David', 'Helena Vondráčková', 'Eva Pilarová', 'Jaromír Nohavica', 'Chinaski', 'Kabát', 'Support Lesbiens', 'Monkey Business', 'Tomáš Klus', 'Aneta Langerová', 'Barbora Poláková', 'Pokáč', 'Kapitán Demo', 'Majself', 'Yzomandias', 'Paulie Garand', 'Řezník', 'Hugo Toxxx', 'Ty Nikdy', 'Konec Legál', 'James Cole', 'Prago Union', 'Orion'],
+      hu: ['Kállay Saunders', 'ByeAlex', 'Margaret Island', 'Miskolci', 'Majka', 'Emilio', 'Vastag Csaba', 'Szabó Zsófi', 'Punnany Massif', 'Halott Pénz', 'Ákos', 'Omega', 'Kowalski & Varga', 'Bagossy Brothers', 'Follow the Flow', 'Honeybeast', 'Glam Metal Detectives', 'AWS', 'Tankcsapda', 'Quimby', 'Péterfy Bori', 'Bánkúti Sisa', 'Rúzsa Magdi', 'Nótár Mary', 'Sándorfi Edina'],
+      jp: ['Hikaru Utada', 'Ado', 'Yoasobi', 'Kenshi Yonezu', 'Official Hige Dandism', 'Yorushika', 'LiSA', 'Fujii Kaze', 'Mrs. Green Apple', 'Radwimps', 'Aimyon', 'Vaundy', 'Creepy Nuts', 'King Gnu', 'Ayumi Hamasaki', 'Namie Amuro', 'Mr. Children', 'One Ok Rock', 'Perfume', 'Babymetal', 'GReeeeN', 'Maximum the Hormone', 'Buck-Tick', 'Scandal', 'X Japan'],
+      kr: ['BTS', 'BLACKPINK', 'Twice', 'NewJeans', 'aespa', 'IVE', 'Le Sserafim', 'Stray Kids', 'EXO', 'NCT', 'Red Velvet', 'ITZY', '(G)I-DLE', 'GOT7', 'Seventeen', 'TXT', 'Ateez', 'Enhypen', 'PSY', 'Zico', 'Jay Park', 'Dean', 'IU', 'Taeyeon', 'Sunmi'],
+      cn: ['Jay Chou', 'Eason Chan', 'Wang Fei', 'Jackson Wang', 'Kris Wu', 'Lay Zhang', 'Joker Xue', 'G.E.M.', 'Stefanie Sun', 'JJ Lin', 'Wilber Pan', 'Show Luo', 'Hebe Tian', 'Mayday', 'Wang Leehom', 'Na Ying', 'Liu Huan', 'Li Ronghao', 'Zhou Shen', 'Hu Xia', 'Cai Xukun', 'Wang Sulong', 'Zhang Bichen', 'Dim Sum', 'Hua Chenyu'],
+      in: ['Arijit Singh', 'AR Rahman', 'Shreya Ghoshal', 'Sonu Nigam', 'Neha Kakkar', 'Pritam', 'Badshah', 'Yo Yo Honey Singh', 'Jubin Nautiyal', 'Udit Narayan', 'Kumar Sanu', 'Alka Yagnik', 'Vishal Shekhar', 'Amit Trivedi', 'Anirudh', 'Ilaiyaraaja', 'KK', 'SP Balasubrahmanyam', 'Devi Sri Prasad', 'Sid Sriram', 'Lata Mangeshkar', 'Mohd. Rafi', 'Kishore Kumar', 'Atif Aslam', 'Armaan Malik'],
+      id: ['Tulus', 'Rizky Febian', 'Raisa', 'Isyana Sarasvati', 'Yura Yunita', 'Afgan', 'Judika', 'Ariel Noah', 'Anji', 'Lesti', 'Denny Caknan', 'Yeni Inka', 'Nella Kharisma', 'Via Vallen', 'Slank', 'Peterpan', 'Nidji', 'Padi', 'Ungu', 'Kotak', 'Geisha', 'Drive', 'Sheryl Sheinafia', 'Keisya Levronka', 'Mahalini'],
+      ph: ['Sarah Geronimo', 'KZ Tandingan', 'Darren Espanto', 'Juan Karlos', 'Zack Tabudlo', 'Ben&Ben', 'SB19', 'BINI', 'Hale', 'Parokya ni Edgar', 'Bamboo', 'Sponge Cola', 'Callalily', 'Rivermaya', 'Eraserheads', 'Kamikazee', 'Sandwich', 'Sugarfree', 'Pupil', 'Itchyworms', 'True Faith', 'Moonstar88', 'Up Dharma Down', 'Clara Benin', 'Leanne & Naara'],
+      th: ['Bird Thongchai', 'Bodyslam', 'Paradox', 'Potato', 'Slot Machine', 'Singular', 'Palaphol', 'Toon Lap', 'Greasy Cafe', 'Phum Viphurit', 'Stamp Apiwat', 'Jeff Satur', 'Bright Vachirawit', 'Win Metawin', 'Milk Pansa', 'Pearwah', 'Nanon Korapat', 'Frank Nattawat', 'Tor Pitchaya', 'Sand Thanapon', 'Pop Pongkool', 'Da Endorphine', 'Jannine Weigel', 'Violette Wautier', 'Lazer'],
+      vn: ['Son Tung M-TP', 'Jack', 'Binz', 'Wxrdie', 'Den Vau', 'Andree Right Hand', 'Suboi', 'Touliver', 'Erik', 'Hoang Thuy Linh', 'Noo Phuoc Thinh', 'Bich Phuong', 'My Tam', 'Dam Vinh Hung', 'Thanh Lam', 'Lam Truong', 'Tuan Hung', 'Mr. Siro', 'Phuong Vy', 'Hari Won', 'Minh Hang', 'Chi Pu', 'Duc Phuc', 'Bao Anh', 'MIN'],
+      my: ['Faizal Tahir', 'Yuna', 'Siti Nurhaliza', 'Amy Search', 'Hazama', 'Shila Amzah', 'Dayang Nurfaizah', 'Zarith Sofia', 'Haqiem Rusli', 'Hanin Dhiya', 'Ismail Izzani', 'Wany Hasrita', 'Aqasha', 'Awi Rafael', 'Jaclyn Victor', 'Zee Avi', 'Altimet', 'Yonnyboii', 'Ruffedge', 'Namewee', 'Joe Flizzow', 'SonaOne', 'Bunga', 'K-Clique', 'Luqman Podolski'],
+      sg: ['JJ Lin', 'Stefanie Sun', 'Dick Lee', 'Kit Chan', 'The Sam Willows', 'Gentle Bones', 'Charlie Lim', 'Inch Chua', 'Linying', 'Benjamin Kheng', 'Shye', 'Jasmine Sokko', 'Fariz RM', 'Sezairi', 'Taufik Batisah', 'Sylvia Ratonel', 'Nathan Hartono', 'Joanna Dong', 'Fiona Sit', 'Sun Ho', 'Mavis Hee', 'Kelvin Tan', 'Derrick Hoh', 'Tat Tong', 'Vandetta'],
+      pk: ['Atif Aslam', 'Rahat Fateh Ali Khan', 'Ali Zafar', 'Strings', 'Noori', 'Junoon', 'Nusrat Fateh Ali Khan (legacy)', 'Abida Parveen', 'Ali Azmat', 'Sajjad Ali', 'Hadiqa Kiani', 'Meesha Shafi', 'Momina Mustehsan', 'Farhan Saeed', 'Asrar', 'Jimmy Khan', 'Bilal Khan', 'Young Stunners', 'Talha Anjum', 'Rap Demon', 'Faris Shafi', 'Talhah Yunus', 'Nawab', 'Kaleemullah', 'Mooroo'],
+      bd: ['James', 'Ayub Bachchu', 'Shafin Ahmed', 'Habib Wahid', 'Kumar Bishwajit', 'Runa Laila', 'Sabina Yasmin', 'Fahmida Nabi', 'Konal', 'Porshi', 'Tahsan', 'Belal Khan', 'Imran', 'Asif Akbar', 'Nancy', 'Shuvro', 'Balam', 'Partha Barua', 'Arnob', 'Minar', 'Shayan Chowdhury', 'Elias Ahmed', 'Jalali Set', 'Cryptic Fate', 'Nemesis'],
+      lk: ['Bathiya & Santhush', 'Ranidu Lankage', 'Supun Perera', 'Iraj Weeraratne', 'Maharaja Band', 'Ridma Weerawardena', 'Ravi Jay', 'Umaria Sinhawansa', 'Nadeeka Guruge', 'Sachini Nipunsala', 'Bathiya', 'Santhush', 'Flash Back', 'Kasun Kalhara', 'Jagath Wickramasinghe', 'Suranga Bandara', 'Charitha Attalage', 'Sanuka Wickramasinghe', 'Yohani', 'Shehan Karunatilaka', 'Enrique Wickramasinghe', 'Keshan Dinupa', 'Shenal Rodrigo', 'Dinesh Subasinghe', 'Dino Corera'],
+      np: ['Neetesh Jung Kunwar', 'Bartika Eam Rai', 'Swoopna Suman', 'Bipul Chettri', 'The Uglyz', 'Albatross', 'Himal Sagar', 'Paul Shah', 'Jibesh Malla', 'Sisan Baniya', 'Pemba Sherpa', 'Prabesh Kumar Shreshta', 'Narayan Gopal (legacy)', 'Deepak Limbu', 'Raju Lama', 'Sanjay Shrestha', 'Milan Satyal', 'Robin Tamang', 'Hari Bansa Acharya', 'Yestai Rahechha', 'Sugam Pokhrel', 'Anil Singh', 'Bikram Baral', 'Sushant KC', 'Laure'],
+      au: ['Tones and I', 'Troye Sivan', 'Sia', 'The Kid LAROI', 'Vance Joy', '5 Seconds of Summer', 'Flume', 'Amy Shark', 'Courtney Barnett', 'Lime Cordiale', 'Tame Impala', 'Gang of Youths', 'Sticky Fingers', 'Peking Duk', 'Hayley Mary', 'Mallrat', 'G Flip', 'Spacey Jane', 'DMAs', 'Amyl and the Sniffers', 'Confidence Man', 'Hiatus Kaiyote', 'Iggy Azalea', 'Didirri', 'Pacific Avenue'],
+      nz: ['Lorde', 'Six60', 'Benee', 'Aldous Harding', 'The Beths', 'Drax Project', 'Fat Freddy\'s Drop', 'Bic Runga', 'Brooke Fraser', 'Dave Dobbyn', 'Elemeno P', 'Villainy', 'Motocade', 'Kings', 'L.A.B.', 'Tiny Ruins', 'Anna Coddington', 'Marlon Williams', 'Nadia Reid', 'Teeks', 'Sol3 Mio', 'Hollie Smith', 'Anika Moa', 'Tami Neilson', 'Fly My Pretties'],
+      sa: ['Mohammed Abdu', 'Rabeh Saqer', 'Majid Al Mohandis', 'Aseel Abou Bakr', 'Hussain Al Jasmi', 'Hamed Zaki', 'Raid Al Shammari', 'Mishari Rashid', 'Salem Al Hendi', 'Omar Abdallat', 'Khaled Al Amir', 'Ahlam', 'Mohammed Noor', 'Abdullah Al Ruwaished', 'Naser Al Qasabi', 'Shatha Hassoun', 'Ibrahim Al Hakami', 'Maher Zain', 'Balqees', 'Hala Al Turk', 'Shamma Hamdan', 'Aseel Abou Bakr', 'Yusuf Abdallat', 'Mohamed Zain', 'Osamah Al Rahbani'],
+      ae: ['Hussain Al Jasmi', 'Ahlam', 'Balqees', 'Hala Al Turk', 'Shamma Hamdan', 'Mohammed Abdu', 'Majid Al Mohandis', 'Aseel Abou Bakr', 'Yusuf Abdallat', 'Fairouz (regional)', 'Elissa', 'Nancy Ajram', 'Carole Samaha', 'Nawal Al Zoghbi', 'Haifa Wehbe', 'Wael Kfoury', 'Marwan Khoury', 'Ragheb Alama', 'George Wassouf', 'Kadim Al Saher', 'Saber Rebai', 'Lotfi Bouchnak', 'Ahmed Bukhatir', 'Dana', 'Mohammed Al Mazem'],
+      tr: ['Tarkan', 'Sezen Aksu', 'İbrahim Tatlıses', 'Mustafa Sandal', 'Ajda Pekkan', 'Sertab Erener', 'Hadise', 'Serdar Ortaç', 'Emre Aydın', 'Kenan Doğulu', 'Ceza', 'Sagopa Kajmer', 'Contra', 'Ezhel', 'Norm Ender', 'Ben Fero', 'Şanışer', 'Uzi', 'Anıl Piyancı', 'Veysel', 'Hidra', 'Murda', 'Batuhan Kordel', 'Sagopa Kajmer', 'Bulent Ersoy'],
+      il: ['Ivri Lider', 'Sarit Hadad', 'Idan Raichel', 'Dana International', 'Rami Kleinstein', 'Shiri Maimon', 'Subliminal', 'Static & Ben El', 'Infected Mushroom', 'Asaf Avidan', 'Netta', 'Eden Alene', 'Harel Skaat', 'Rita', 'Gidi Gov', 'Shlomo Artzi', 'David Broza', 'Yardena Arazi', 'Berry Sakharof', 'Moshe Peretz', 'Omer Adam', 'Noa Kirel', 'Eden Ben Zaken', 'Shefita', 'Lior Narkis'],
+      eg: ['Amr Diab', 'Tamer Hosny', 'Mohamed Mounir', 'Angham', 'Elissa', 'Nancy Ajram', 'Haifa Wehbe', 'Assala', 'Sherine', 'Wael Kfoury', 'Marwan Khoury', 'Ragheb Alama', 'Fairouz', 'Najwa Karam', 'George Wassouf', 'Kadim Al Saher', 'Saber Rebai', 'Hamza Namira', 'Mohamed Hamaki', 'Mahmoud El Esseily', 'Ahmed Saad', 'Ramy Gamal', 'Saad Lamjarred', 'Lotfi Bouchnak', 'Baligh Hamdi'],
+      ir: ['Shadmehr Aghili', 'Googoosh', 'Dariush', 'Ebi', 'Sattar', 'Leila Forouhar', 'Faramarz Aslani', 'Hader Parande', 'Sasy', 'Darya', 'Reza Sadeghi', 'Mohsen Yeganeh', 'Siavash Ghomayshi', 'Habib Mohebian', 'Shahram Nazeri', 'Farhad Mehrad', 'Vigen', 'Hourieh', 'Sharareh', 'Martik', 'Benyamin Bahadori', 'Sirvan Khosravi', 'Hossein Tohi', 'Xaniar Khosravi', 'Moein'],
+      ng: ['Burna Boy', 'Wizkid', 'Davido', 'Tems', 'Asake', 'Fireboy DML', 'Ckay', 'Rema', 'Omah Lay', 'Olamide', 'Falz', 'Wande Coal', 'Tekno', 'Mr Eazi', 'Tiwa Savage', 'Yemi Alade', 'Patoranking', 'Flavour', 'Phyno', 'Zlatan', 'Naira Marley', 'Laycon', 'Joeboy', 'BNXN', 'Oxlade'],
+      za: ['Cassper Nyovest', 'AKA', 'Nasty C', 'Sjava', 'Big Zulu', 'Focalistic', 'Kabza de Small', 'DJ Maphorisa', 'Master KG', 'Black Coffee', 'Sho Madjozi', 'Busiswa', 'Nomcebo Zikode', 'Tresor', 'Mafikizolo', 'Ladysmith Black Mambazo', 'Johnny Clegg', 'Lucky Dube', 'Miriam Makeba (legacy)', 'Hugh Masekela (legacy)', 'Brenda Fassie (legacy)', 'Yvonne Chaka Chaka', 'P.H.Fat', 'Die Antwoord', 'Nandi Mthethwa'],
+      gh: ['Sarkodie', 'Stonebwoy', 'Shatta Wale', 'R2Bees', 'EL', 'M.anifest', 'Efya', 'Bisa Kdei', 'Kofi Kinaata', 'Medikal', 'Amerado', 'Black Sherif', 'KiDi', 'Kuami Eugene', 'Lynx', 'Yaa Pono', 'Tic Tac', 'Tinny', 'Eazzy', 'Wendy Shay', 'Sista Afia', 'Adina', 'Joyce Blessing', 'Abiana', 'Celestine Donkor'],
+      ke: ['Sauti Sol', 'Nyashinski', 'Khaligraph Jones', 'Octopizzo', 'Nviiri', 'Bien', 'Arrow Bwoy', 'Boondocks Gang', 'DJ Afro', 'Size 8', 'Nameless', 'Wyre', 'Nadia Mukami', 'Ruth Matete', 'Mercy Masika', 'Guardian Angel', 'Bahati', 'Willy Paul', 'Eunice Njeri', 'Pitson', 'Emmy Kosgei', 'Rose Muhando', 'Daddy Owen', 'DNG', 'Otile Brown'],
+      ma: ['Saâd Lamjarred', 'Douzi', 'RedOne', 'French Montana', 'Abdelhadi Belkhayat', 'Master Sina', 'Fnaire', 'Hoba Hoba Spirit', 'H-Kayne', 'Khtek', 'Don Bigg', 'Lbenj', '7liwa', 'Maher Zain', 'Ahlam', 'Cheba Manel', 'Saber Rebai', 'Latifa', 'Zina Daoudia', 'Chaîb', 'Asmahan', 'Najat Aatabou', 'Jamel Debbouze (comedy)', 'Oum', 'Oussama'],
+      br: ['Anitta', 'Gusttavo Lima', 'Marilia Mendonça', 'Jorge & Mateus', 'Wesley Safadão', 'MC Kevinho', 'Luisa Sonza', 'Pedro Sampaio', 'L7NNON', 'Emicida', 'Seu Jorge', 'Ivete Sangalo', 'Claudia Leitte', 'Pabllo Vittar', 'Gloria Groove', 'Jão', 'Luan Santana', 'Henrique & Juliano', 'Simone & Simaria', 'Maiara & Maraisa', 'MC G15', 'MC Fioti', 'Kevin O Chris', 'MC Don Juan', 'Leon & Mateus'],
+      mx: ['Peso Pluma', 'Natanael Cano', 'Eslabon Armado', 'Fuerza Regida', 'Junior H', 'Xavi', 'Banda MS', 'Christian Nodal', 'Alejandro Fernández', 'Vicente Fernández', 'Luis Miguel', 'Juan Gabriel', 'Jenni Rivera', 'Lupillo Rivera', 'Los Tigres del Norte', 'Gerardo Ortiz', 'Lenin Ramirez', 'El Fantasma', 'Calibre 50', 'Bronco', 'Ramon Ayala', 'Los Yonics', 'Los Bukis', 'La Arrolladora', 'Marco Antonio Solis'],
+      ar: ['Tini Stoessel', 'Lali Espósito', 'Nicki Nicole', 'Cazzu', 'Duki', 'Bizarrap', 'WOS', 'Paulo Londra', 'Khea', 'Ca7riel', 'Trueno', 'Flor Alvarez', 'FMK', 'La K\'onga', 'Los Palmeras', 'Abel Pintos', 'Diego Torres', 'Charly García', 'Fito Páez', 'Divididos', 'Los Redonditos', 'Soda Stereo', 'Gustavo Cerati (legacy)', 'Andrés Calamaro', 'Joaquín Sabina (ARG)'],
+      co: ['J Balvin', 'Maluma', 'Karol G', 'Carlos Vives', 'Fonseca', 'Silvestre Dangond', 'Manuel Medrano', 'Piso 21', 'Ventino', 'Morat', 'Sebastián Yatra', 'Cali y El Dandee', 'ChocQuibTown', 'Bomba Estéreo', 'Diamante Eléctrico', 'Monsieur Periné', 'Systema Solar', 'Totó la Momposina', 'La Sonora Dinamita', 'Binomio de Oro', 'Los Diablitos', 'Juanes', 'Shakira', 'Kali Uchis', 'Ela Minus'],
+      cl: ['Mon Laferte', 'Francisca Valenzuela', 'Los Bunkers', 'Ángela Aguilar', 'Javiera Mena', 'Gepe', 'Alex Anwandter', 'Felupe Bravo', 'Jorge González', 'Los Tres', 'Lucybell', 'La Ley', 'Sinergia', 'Chancho En Piedra', 'Weichafe', 'Gondwana', 'Los Jaivas', 'Congreso', 'Tiro De Gracia', 'Ana Tijoux', 'Portavoz', 'Florcita Motuda', 'Cristóbal Briseño', 'Pedropiedra', 'Chinoy'],
+      pe: ['Corazón Serrano', 'Agua Marina', 'Hermanos Yaipén', 'Orquesta Candela', 'Tony Rosado', 'Noche de Brujas', 'Grupo 5', 'Daniela Darcourt', 'Yahaira Plasencia', 'Milena Warthon', 'Pedro Suárez Vértiz', 'Libido', 'La Liga del Sueño', 'Bareto', 'Costumbres', 'Arena Hash', 'Líbido', 'Del Pueblo Records', 'Deyvis Orosco', 'Armonía 10', 'Jean Pierre Magnet', 'La Gran Orquesta Internacional', 'Chacalón (legacy)', 'Los Embajadores Criollos', 'Zambo Cavero (legacy)'],
+      sn: ['Youssou N\'Dour', 'Baaba Maal', 'Omar Pene', 'Viviane Chidid', 'Wally Seck', 'Thione Seck (legacy)', 'Fallou Dieng', 'Awadi', 'Simon', 'Didier Awadi', 'Duggy Tee', 'Daara J Family', 'Positive Black Soul', 'Aida Samb', 'Pape Diouf', 'Ismael Lô', 'Baba Maal', 'Cheikh Lo', 'Orchestra Baobab', 'Idrissa Diop', 'Alioune Mbaye Nder', 'Baba Hamdy', 'Mbaye Dieye Faye', 'Ouza Diallo', 'Aby Ndoye']
+    };
+
+    /* =====================================================
+       RENDER ARTISTS
+       ===================================================== */
+    function renderArtists(code) {
+      const list = ARTISTS[code] || ARTISTS.global;
+      const row = document.getElementById('topArtists');
+      row.innerHTML = list.map((name, i) => {
+        const rank = i + 1;
+        const color = avatarColor(name);
+        const abbr = initials(name);
+        const isTop3 = rank <= 3;
+        const isFeat = rank === 1;
+        // featured class only changes border/glow, NOT size
+        const circleClass = isFeat ? 'artist-circle featured' : 'artist-circle';
+        const badgeClass = isTop3 ? 'rank-badge top3' : 'rank-badge';
+        return `
+      <div class="artist-item">
+        <div class="${circleClass}">
+          <div class="circle-placeholder" style="background:${color}">${abbr}</div>
+          <div class="${badgeClass}">${rank}</div>
+        </div>
+        <span class="artist-name">${name}</span>
+      </div>`;
+      }).join('');
+    }
+
+    /* =====================================================
+       COUNTRY DROPDOWN
+       ===================================================== */
+    function toggleCountryMenu() {
+      const t = document.getElementById('countryTrigger');
+      const m = document.getElementById('countryMenu');
+      const open = t.classList.toggle('open');
+      m.classList.toggle('open', open);
+      if (open) {
+        const searchInput = document.getElementById('countrySearch');
+        searchInput.value = '';
+        filterCountries('');
+        setTimeout(() => searchInput.focus(), 50);
+      }
+    }
+
+    function filterCountries(query) {
+      const q = query.toLowerCase().trim();
+      const menu = document.getElementById('countryMenu');
+      const options = menu.querySelectorAll('.cm-option');
+      const regionLabels = menu.querySelectorAll('.cm-region-lbl');
+      const dividers = menu.querySelectorAll('.cm-divider');
+
+      // Show/hide each option
+      options.forEach(opt => {
+        const name = (opt.dataset.name || '').toLowerCase();
+        const sub = (opt.dataset.sub || '').toLowerCase();
+        const match = !q || name.includes(q) || sub.includes(q);
+        opt.style.display = match ? '' : 'none';
+      });
+
+      // Show/hide region labels based on whether they have visible options after them
+      regionLabels.forEach(lbl => {
+        let next = lbl.nextElementSibling;
+        let hasVisible = false;
+        while (next && !next.classList.contains('cm-region-lbl') && !next.classList.contains('cm-divider')) {
+          if (next.classList.contains('cm-option') && next.style.display !== 'none') hasVisible = true;
+          next = next.nextElementSibling;
+        }
+        lbl.style.display = hasVisible ? '' : 'none';
+      });
+
+      // Show/hide dividers based on surrounding visible content
+      dividers.forEach(div => {
+        let prev = div.previousElementSibling;
+        let next = div.nextElementSibling;
+        const prevVisible = prev && prev.style.display !== 'none';
+        const nextVisible = next && next.style.display !== 'none';
+        div.style.display = (prevVisible && nextVisible) ? '' : 'none';
+      });
+    }
+
+    function selectCountry(el) {
+      const code = el.dataset.code;
+      const flag = el.dataset.flag;
+      const name = el.dataset.name;
+      const sub = el.dataset.sub;
+
+      document.getElementById('dtFlag').textContent = flag;
+      document.getElementById('dtMain').textContent = name;
+      document.getElementById('dtSub').textContent = sub;
+
+      document.querySelectorAll('.cm-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+
+      document.getElementById('countryTrigger').classList.remove('open');
+      document.getElementById('countryMenu').classList.remove('open');
+
+      renderArtists(code);
+    }
+
+    document.addEventListener('click', e => {
+      const drop = document.getElementById('countryDrop');
+      if (drop && !drop.contains(e.target)) {
+        document.getElementById('countryTrigger').classList.remove('open');
+        document.getElementById('countryMenu').classList.remove('open');
+      }
+    });
+
+    /* =====================================================
+       TABS
+       ===================================================== */
+    function switchTab(id, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    /* =====================================================
+       ARTIST ROW SCROLL
+       ===================================================== */
+    function scrollRow(id, dir) {
+      document.getElementById(id)?.scrollBy({ left: dir * 280, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.artist-row').forEach(row => {
+      row.addEventListener('wheel', e => {
+        if (e.deltaY !== 0) { e.preventDefault(); row.scrollLeft += e.deltaY; }
+      }, { passive: false });
+    });
+
+    /* =====================================================
+       NIGHT MODE — observe data-theme attribute changes
+       so the home page reacts without a reload
+       ===================================================== */
+    function applyHomeTheme() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      // Section titles: dark mode = light colour, light mode = dark colour
+      document.querySelectorAll('.section-title').forEach(el => {
+        el.style.color = isDark ? 'rgba(191,201,209,0.85)' : '';
+      });
+      // Album labels
+      document.querySelectorAll('.album-label').forEach(el => {
+        el.style.color = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.9)';
+      });
+    }
+
+    // Run once on load, then watch for attribute changes set by sidebar.js
+    applyHomeTheme();
+    new MutationObserver(applyHomeTheme).observe(
+      document.documentElement,
+      { attributes: true, attributeFilter: ['data-theme'] }
+    );
+
+    /* =====================================================
+       GREETING — timezone + browser-language aware
+       Updates live so it stays correct if the tab stays open.
+       ===================================================== */
+    (function () {
+
+      /* Greeting text by time-slot × language code */
+      const GREETINGS = {
+        morning: { en: 'Good Morning' },
+        afternoon: { en: 'Good Afternoon' },
+        evening: { en: 'Good Evening' },
+        night: { en: 'Good Night' },
+      };
+
+      /* Subtitle copy per time-slot */
+      const SUBTITLES = {
+        morning: 'Start your day with the tracks everyone is loving right now',
+        afternoon: 'Discover what\'s trending around the world today',
+        evening: 'Wind down with the hottest hits of the evening',
+        night: 'Night owl? Here\'s what\'s playing around the world',
+      };
+
+      const EMOJIS = {
+        morning: '🌅', afternoon: '☀️', evening: '🎵', night: '🌙',
+      };
+
+      function getSlot(hour) {
+        if (hour >= 5 && hour < 12) return 'morning';
+        if (hour >= 12 && hour < 17) return 'afternoon';
+        if (hour >= 17 && hour < 21) return 'evening';
+        return 'night';
+      }
+
+      function updateGreeting() {
+        /* Always use the user's *local* clock — JS Date is already timezone-aware */
+        const now = new Date();
+        const hour = now.getHours();
+        const slot = getSlot(hour);
+
+        /* Pick language: prefer stored country → browser locale → 'en' */
+        const storedLang = localStorage.getItem('orpheus_music_lang'); // saved from signup step 3
+        const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+        const lang = (storedLang && GREETINGS[slot][storedLang]) ? storedLang
+          : (GREETINGS[slot][browserLang] ? browserLang
+            : 'en');
+
+        const headingEl = document.getElementById('greetingHeading');
+        const subtitleEl = document.getElementById('greetingSubtitle');
+        if (headingEl) headingEl.textContent = GREETINGS[slot][lang] + ' ' + EMOJIS[slot];
+        if (subtitleEl) subtitleEl.textContent = SUBTITLES[slot];
+      }
+
+      /* Run immediately, then re-check every minute so the slot
+         flips in real time if the page stays open across a boundary. */
+      updateGreeting();
+      setInterval(updateGreeting, 60_000);
+
+    })();
+
+    /* =====================================================
+       SUPABASE CONFIG (reuse the credentials already loaded
+       by supabase.js / auth-guard.js via the global client,
+       but we also keep a direct REST fallback for counts)
+       ===================================================== */
+    const _HOME_SB_URL = SUPABASE_URL;
+    const _HOME_SB_KEY = SUPABASE_KEY;
+
+    /* =====================================================
+       BANNER STATS — live counts from the songs table
+       ===================================================== */
+    async function loadBannerStats() {
+      try {
+        // Fetch total tracks count
+        const trackRes = await fetch(
+          `${_HOME_SB_URL}/rest/v1/songs?select=id`,
+          { headers: { apikey: _HOME_SB_KEY, Authorization: `Bearer ${_HOME_SB_KEY}`, Prefer: 'count=exact', Range: '0-0' } }
+        );
+        const totalTracks = parseInt(trackRes.headers.get('content-range')?.split('/')[1] || '0', 10);
+
+        // Fetch all artist + album values (light payload)
+        const dataRes = await fetch(
+          `${_HOME_SB_URL}/rest/v1/songs?select=artist,album`,
+          { headers: { apikey: _HOME_SB_KEY, Authorization: `Bearer ${_HOME_SB_KEY}`, Accept: 'application/json' } }
+        );
+        const rows = await dataRes.json();
+        const uniqueArtists = new Set(rows.map(r => r.artist).filter(Boolean)).size;
+        const uniqueAlbums = new Set(rows.map(r => r.album).filter(Boolean)).size;
+
+        // Helper: format large numbers nicely
+        function fmtCount(n) {
+          if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+          if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+          return String(n);
+        }
+
+        const el = id => document.getElementById(id);
+        if (el('statTracks')) el('statTracks').textContent = fmtCount(totalTracks);
+        if (el('statArtists')) el('statArtists').textContent = fmtCount(uniqueArtists);
+        if (el('statAlbums')) el('statAlbums').textContent = fmtCount(uniqueAlbums);
+      } catch (err) {
+        console.warn('Could not load banner stats:', err);
+      }
+    }
+
+    /* =====================================================
+       CURRENT ARTISTS — from home_artists table, ordered by
+       priority (1 = first), max 20, with artist image support.
+       Each card links to playing.html?artist=<n>
+       ===================================================== */
+    async function loadDbArtists() {
+      const row = document.getElementById('dbArtists');
+      if (!row) return;
+      try {
+        const res = await fetch(
+          `${_HOME_SB_URL}/rest/v1/home_artists?select=artist_name,priority,image_url&order=priority.asc&limit=20`,
+          { headers: { apikey: _HOME_SB_KEY, Authorization: `Bearer ${_HOME_SB_KEY}`, Accept: 'application/json' } }
+        );
+        const artists = await res.json();
+
+        if (!artists.length) {
+          row.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">No artists found in library.</div>';
+          return;
+        }
+
+        row.innerHTML = artists.map(a => {
+          const name = a.artist_name || '';
+          const color = avatarColor(name);
+          const abbr = initials(name);
+          const encoded = encodeURIComponent(name);
+          const imgInner = a.image_url
+            ? `<img src="${a.image_url}" alt="${name}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="circle-placeholder" style="background:${color};display:none;">${abbr}</div>`
+            : `<div class="circle-placeholder" style="background:${color}">${abbr}</div>`;
+          return `
+          <div class="artist-item" style="cursor:pointer;" onclick="window.location.href='playing.html?artist=${encoded}'">
+            <div class="artist-circle" style="overflow:hidden;">
+              ${imgInner}
+            </div>
+            <span class="artist-name">${name}</span>
+          </div>`;
+        }).join('');
+
+        // Re-apply scroll wheel handler for the new row
+        row.addEventListener('wheel', e => {
+          if (e.deltaY !== 0) { e.preventDefault(); row.scrollLeft += e.deltaY; }
+        }, { passive: false });
+
+      } catch (err) {
+        console.warn('Could not load DB artists:', err);
+        row.innerHTML = '<div style="color:rgba(191,201,209,.4);font-size:.8rem;padding:20px;">Could not load artists.</div>';
+      }
+    }
+
+    /* =====================================================
+       INIT
+       ===================================================== */
+    loadBannerStats();
+    loadDbArtists();
+    renderArtists('global');
+  </script>
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>

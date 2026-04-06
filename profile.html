@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .content { overflow-y: auto; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+            background: var(--bg-nav); color: #fff;
+            border: 1px solid rgba(255,155,81,0.35); border-radius: 12px;
+            padding: 12px 20px; font-family: var(--font-sans); font-size: 0.87rem;
+            font-weight: 600; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 8px 28px rgba(37,52,63,0.4);
+            transform: translateY(80px); opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.3s;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { color: var(--gold); font-size: 1.1rem; }
+
+        /* Profile hero */
+        .profile-hero {
+            background: linear-gradient(130deg, var(--bg-nav) 0%, #2e4455 60%, #3a5268 100%);
+            border-radius: 20px; padding: 32px 36px;
+            display: flex; align-items: center; gap: 28px;
+            position: relative; overflow: hidden;
+            border: 1px solid rgba(191,201,209,0.1);
+            box-shadow: 0 6px 32px rgba(37,52,63,0.2);
+        }
+        .profile-hero::before {
+            content: ''; position: absolute; top: -80px; right: -80px;
+            width: 320px; height: 320px; border-radius: 50%;
+            background: rgba(255,155,81,0.06); pointer-events: none;
+        }
+
+        /* Avatar upload */
+        .profile-avatar-wrap { position: relative; flex-shrink: 0; cursor: pointer; }
+        .profile-avatar-circle {
+            width: 96px; height: 96px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-dark,#e8832e), var(--gold,#FF9B51));
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-heading); font-size: 2rem; font-weight: 900;
+            color: #fff; border: 3px solid rgba(255,155,81,0.4); overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .profile-avatar-circle img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-avatar-wrap:hover .profile-avatar-circle { border-color: var(--gold,#FF9B51); }
+        .avatar-upload-overlay {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: rgba(37,52,63,0.7);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.2s;
+            font-size: 0.58rem; font-weight: 700; color: #fff;
+            letter-spacing: 1px; text-transform: uppercase; gap: 3px;
+        }
+        .profile-avatar-wrap:hover .avatar-upload-overlay { opacity: 1; }
+        .avatar-upload-overlay svg { width: 18px; height: 18px; }
+        #avatarFileInput { display: none; }
+
+        /* Hero info */
+        .profile-hero-info { flex: 1; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
+
+        .profile-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .profile-name-display {
+            font-family: var(--font-heading); font-size: 1.5rem; font-weight: 900;
+            color: #fff; letter-spacing: 0.04em;
+        }
+        .member-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,155,81,0.15); border: 1px solid rgba(255,155,81,0.3);
+            border-radius: 20px; padding: 3px 10px;
+            font-size: 0.7rem; font-weight: 700; color: var(--gold,#FF9B51); letter-spacing: 0.05em;
+        }
+        .edit-icon-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 8px; padding: 5px 10px; cursor: pointer;
+            color: rgba(191,201,209,0.7); font-size: 0.75rem;
+            display: flex; align-items: center; gap: 5px;
+            transition: all 0.2s; font-family: var(--font-sans); font-weight: 600;
+        }
+        .edit-icon-btn:hover { background: rgba(255,155,81,0.18); border-color: rgba(255,155,81,0.45); color: var(--gold,#FF9B51); }
+
+        /* Inline name editor */
+        .name-edit-row { display: none; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .name-edit-row.open { display: flex; }
+        .name-edit-input {
+            background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,155,81,0.4);
+            border-radius: 9px; padding: 8px 14px; color: #fff;
+            font-family: var(--font-sans); font-size: 0.95rem; outline: none;
+            width: 220px; transition: border-color 0.2s;
+        }
+        .name-edit-input:focus { border-color: var(--gold,#FF9B51); }
+        .save-btn {
+            background: var(--gold,#FF9B51); color: #fff; border: none; border-radius: 9px;
+            padding: 8px 18px; font-family: var(--font-sans); font-size: 0.82rem;
+            font-weight: 700; cursor: pointer; transition: background 0.2s;
+        }
+        .save-btn:hover { background: var(--gold-dark,#e8832e); }
+        .cancel-btn {
+            background: transparent; color: rgba(191,201,209,0.6);
+            border: 1px solid rgba(191,201,209,0.25); border-radius: 9px;
+            padding: 8px 14px; font-family: var(--font-sans); font-size: 0.82rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .cancel-btn:hover { border-color: rgba(191,201,209,0.55); color: #fff; }
+
+        /* Bio */
+        .profile-bio-text {
+            font-size: 0.88rem; color: rgba(191,201,209,0.65); line-height: 1.5;
+            cursor: pointer; min-height: 22px; transition: color 0.2s;
+        }
+        .profile-bio-text:hover { color: rgba(191,201,209,0.9); }
+        .bio-placeholder { opacity: 0.45; font-style: italic; }
+        .bio-edit-area { display: none; flex-direction: column; gap: 6px; }
+        .bio-edit-area.open { display: flex; }
+        .bio-textarea {
+            background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,155,81,0.4);
+            border-radius: 9px; padding: 9px 13px; color: #fff;
+            font-family: var(--font-sans); font-size: 0.88rem; outline: none;
+            resize: none; width: 100%; max-width: 460px; line-height: 1.5;
+        }
+        .bio-textarea:focus { border-color: var(--gold,#FF9B51); }
+        .bio-char-count { font-size: 0.72rem; color: rgba(191,201,209,0.38); text-align: right; max-width: 460px; }
+        .bio-actions { display: flex; gap: 8px; }
+
+        /* Stats */
+        .profile-stats { display: flex; gap: 28px; padding-top: 2px; }
+        .profile-stat { text-align: center; }
+        .profile-stat-num {
+            font-family: var(--font-heading); font-size: 1.1rem; font-weight: 900;
+            color: var(--gold,#FF9B51); display: block;
+        }
+        .profile-stat-lbl {
+            font-size: 0.68rem; color: rgba(191,201,209,0.45);
+            letter-spacing: 1.2px; text-transform: uppercase; margin-top: 1px;
+        }
+
+        /* Section cards */
+        .profile-section-card {
+            background: var(--bg-card); border: 1px solid var(--card-border);
+            border-radius: 18px; padding: 22px 24px;
+            box-shadow: 0 2px 14px var(--shadow); transition: background 0.3s;
+        }
+        .profile-section-title {
+            font-family: var(--font-heading); font-size: 0.72rem; font-weight: 700;
+            color: var(--gold,#FF9B51); letter-spacing: 0.18em; text-transform: uppercase;
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .profile-section-title::before {
+            content: ''; width: 3px; height: 13px;
+            background: var(--gold,#FF9B51); border-radius: 2px; display: inline-block; flex-shrink: 0;
+        }
+
+        /* Two column */
+        .profile-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 860px) { .profile-two-col { grid-template-columns: 1fr; } }
+
+        /* Recent activity */
+        .activity-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--card-border);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-thumb {
+            width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .activity-info { flex: 1; min-width: 0; }
+        .activity-title {
+            font-size: 0.88rem; font-weight: 700; color: var(--text-dark);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .activity-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 1px; }
+        .activity-time { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+
+        /* Following */
+        .following-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(68px,1fr)); gap: 12px;
+        }
+        .following-item {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .following-item:hover { transform: translateY(-4px); }
+        .following-circle {
+            width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-heading); font-size: 0.85rem; font-weight: 900;
+            color: #fff; border: 2px solid rgba(191,201,209,0.12);
+            transition: border-color 0.2s;
+        }
+        .following-item:hover .following-circle { border-color: var(--gold,#FF9B51); box-shadow: 0 0 0 3px rgba(255,155,81,0.15); }
+        .following-name {
+            font-size: 0.67rem; font-weight: 600; color: var(--text-muted);
+            text-align: center; max-width: 68px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        /* Genres */
+        .genre-pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .genre-pill {
+            background: rgba(255,155,81,0.1); border: 1px solid rgba(255,155,81,0.25);
+            border-radius: 20px; padding: 5px 14px;
+            font-size: 0.78rem; font-weight: 700; color: var(--gold,#FF9B51); letter-spacing: 0.04em;
+        }
+
+        /* ── Guest wall ── */
+        .guest-wall {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 24px;
+            min-height: calc(100vh - 64px);
+            gap: 0;
+        }
+        .guest-wall-icon {
+            width: 88px; height: 88px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,155,81,0.15), rgba(255,155,81,0.05));
+            border: 1.5px solid rgba(255,155,81,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; margin-bottom: 28px;
+            box-shadow: 0 0 40px rgba(255,155,81,0.1);
+        }
+        .guest-wall-title {
+            font-family: var(--font-heading); font-size: 1.35rem; font-weight: 900;
+            color: var(--text-dark); letter-spacing: 0.04em; margin-bottom: 10px;
+        }
+        .guest-wall-sub {
+            font-size: 0.9rem; color: var(--text-muted); line-height: 1.65;
+            max-width: 340px; margin-bottom: 36px;
+        }
+        .guest-wall-btns {
+            display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+        }
+        .guest-btn-primary {
+            background: linear-gradient(135deg, var(--gold,#FF9B51), #e8832e);
+            color: #fff; border: none; border-radius: 12px;
+            padding: 13px 28px; font-family: var(--font-heading,inherit);
+            font-size: 0.8rem; font-weight: 900; letter-spacing: 1.5px;
+            cursor: pointer; text-decoration: none;
+            box-shadow: 0 4px 18px rgba(255,155,81,0.35);
+            transition: transform 0.15s, box-shadow 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .guest-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255,155,81,0.45);
+        }
+        .guest-btn-secondary {
+            background: transparent;
+            color: var(--text-dark); border: 1.5px solid var(--card-border);
+            border-radius: 12px; padding: 12px 26px;
+            font-family: var(--font-heading,inherit); font-size: 0.8rem;
+            font-weight: 700; letter-spacing: 1px;
+            cursor: pointer; text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .guest-btn-secondary:hover {
+            border-color: var(--gold,#FF9B51);
+            color: var(--gold,#FF9B51);
+        }
+        .guest-divider {
+            width: 48px; height: 1px;
+            background: var(--card-border); margin: 28px auto;
+        }
+        .guest-wall-note {
+            font-size: 0.78rem; color: var(--text-muted); opacity: 0.6;
+        }
+    </style>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+</head>
+
+<body>
+
+    <!-- TOP NAV injected by sidebar.js -->
+
+    <div class="main-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <main class="content">
+
+            <!-- ══ GUEST WALL (shown when not logged in) ══ -->
+            <div class="guest-wall" id="guestWall" style="display:none;">
+                <div class="guest-wall-icon">🎧</div>
+                <div class="guest-wall-title">You're not signed in</div>
+                <p class="guest-wall-sub">Create an account or sign in to access your profile, liked songs, listening history, and more.</p>
+                <div class="guest-wall-btns">
+                    <a href="signup.html" class="guest-btn-primary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                        CREATE ACCOUNT
+                    </a>
+                    <a href="login.html" class="guest-btn-secondary">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        SIGN IN
+                    </a>
+                </div>
+                <div class="guest-divider"></div>
+                <p class="guest-wall-note">Your data stays private and secure. No spam, ever.</p>
+            </div>
+
+            <!-- ══ PROFILE CONTENT (hidden until login confirmed) ══ -->
+            <div id="profileContent" style="display:none;">
+
+            <!-- ══ PROFILE HERO ══ -->
+            <div class="profile-hero">
+
+                <!-- Avatar -->
+                <div class="profile-avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+                    <div class="profile-avatar-circle" id="profileAvatarCircle">
+                        <img id="profileAvatarImg" src="" alt="" style="display:none;">
+                        <span id="profileAvatarInitial">G</span>
+                    </div>
+                    <div class="avatar-upload-overlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span>Upload</span>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/*">
+                </div>
+
+                <div class="profile-hero-info">
+
+                    <!-- Name row -->
+                    <div>
+                        <div class="profile-name-row" id="nameDisplayRow">
+                            <span class="profile-name-display" id="profileNameDisplay">Guest</span>
+                            <span class="member-badge">⭐ Member</span>
+                            <button class="edit-icon-btn" onclick="openNameEdit()">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Rename
+                            </button>
+                        </div>
+                        <div class="name-edit-row" id="nameEditRow">
+                            <input class="name-edit-input" id="nameEditInput" type="text" placeholder="Display name" maxlength="32">
+                            <button class="save-btn" onclick="saveName()">Save</button>
+                            <button class="cancel-btn" onclick="cancelNameEdit()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div>
+                        <div class="profile-bio-text" id="bioDisplay" onclick="openBioEdit()" title="Click to edit">
+                            <span id="bioText" class="bio-placeholder">Add a short bio…</span>
+                        </div>
+                        <div class="bio-edit-area" id="bioEditArea">
+                            <textarea class="bio-textarea" id="bioTextarea" rows="2" maxlength="160"
+                                placeholder="Tell people a bit about yourself…"
+                                oninput="document.getElementById('bioCount').textContent=this.value.length"></textarea>
+                            <div class="bio-char-count"><span id="bioCount">0</span> / 160</div>
+                            <div class="bio-actions">
+                                <button class="save-btn" onclick="saveBio()">Save Bio</button>
+                                <button class="cancel-btn" onclick="cancelBioEdit()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <span class="profile-stat-num" id="statLiked">0</span>
+                            <span class="profile-stat-lbl">Liked</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="profile-stat-num">10</span>
+                            <span class="profile-stat-lbl">Following</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="profile-stat-num">3</span>
+                            <span class="profile-stat-lbl">Playlists</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ RECENT + RECENTLY PLAYED ARTISTS ══ -->
+            <div class="profile-two-col">
+
+                <div class="profile-section-card">
+                    <div class="profile-section-title">Recent</div>
+                    <div id="recentActivity">
+                        <div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;">Loading recent activity…</div>
+                    </div>
+                </div>
+
+                <div class="profile-section-card">
+                    <div class="profile-section-title">Recently Played Artists</div>
+                    <div class="following-grid" id="recentArtistsGrid">
+                        <div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;">Loading artists…</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ TOP GENRES ══ -->
+            <div class="profile-section-card">
+                <div class="profile-section-title">Your Top Genres</div>
+                <div class="genre-pill-row">
+                    <span class="genre-pill">Hip-Hop</span>
+                    <span class="genre-pill">Rap</span>
+                    <span class="genre-pill">R&amp;B</span>
+                    <span class="genre-pill">Trap</span>
+                    <span class="genre-pill">Pop</span>
+                    <span class="genre-pill">Afrobeats</span>
+                </div>
+            </div><!-- /.profile-section-card genres -->
+
+            </div><!-- /#profileContent -->
+
+        </main>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon">✓</span>
+        <span id="toastMsg">Saved</span>
+    </div>
+
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+    <script>
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+        }
+
+        /* ── Helper: is the stored avatar a real image URL or an emoji? ── */
+        function _isImgUrl(s) {
+            return s && (s.startsWith('data:') || s.startsWith('http') || /\.(png|jpe?g|gif|webp|svg)$/i.test(s));
+        }
+
+        /* ── Helper: keep topbar avatar + genre chip in sync ── */
+        function _syncTopbarAvatar(src) {
+            let topbarImg   = document.getElementById('topbarAvatarImg');
+            const userAvEl  = document.getElementById('userAvatar');
+            if (!userAvEl) return;
+            /* Hide any emoji/initial fallback when a real photo takes over */
+            const fallback = document.getElementById('avatarFallback');
+            if (fallback) fallback.style.display = 'none';
+            if (topbarImg) {
+                topbarImg.src = src;
+            } else {
+                topbarImg = document.createElement('img');
+                topbarImg.id  = 'topbarAvatarImg';
+                topbarImg.alt = 'avatar';
+                topbarImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+                topbarImg.src = src;
+                userAvEl.insertBefore(topbarImg, userAvEl.firstChild);
+            }
+        }
+
+        /* ── Init ── */
+        function loadProfile() {
+            const sessionUser = sessionStorage.getItem('orpheus_user');
+            const storedName  = localStorage.getItem('orpheus_display_name');
+            const isLoggedIn  = !!(sessionUser || storedName);
+
+            if (!isLoggedIn) {
+                document.getElementById('guestWall').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('profileContent').style.display = 'block';
+
+            const name      = storedName || sessionUser || 'Guest';
+            const bio       = localStorage.getItem('orpheus_bio') || '';
+            const avatarSrc = localStorage.getItem('orpheus_avatar') || '';
+            const liked     = JSON.parse(localStorage.getItem('orpheus_liked_songs') || '[]');
+            const genres    = JSON.parse(localStorage.getItem('orpheus_genres') || '[]');
+
+            document.getElementById('profileNameDisplay').textContent = name;
+            document.getElementById('profileAvatarInitial').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('nameEditInput').value = name;
+            document.getElementById('userName').textContent = name;
+            document.getElementById('avatarFallback').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('statLiked').textContent = liked.length;
+
+            const bioEl = document.getElementById('bioText');
+            if (bio) { bioEl.textContent = bio; bioEl.classList.remove('bio-placeholder'); }
+            else      { bioEl.textContent = 'Add a short bio…'; bioEl.classList.add('bio-placeholder'); }
+
+            if (_isImgUrl(avatarSrc)) {
+                /* Real photo — show in <img> */
+                const img = document.getElementById('profileAvatarImg');
+                img.src = avatarSrc; img.style.display = 'block';
+                document.getElementById('profileAvatarInitial').style.display = 'none';
+                _syncTopbarAvatar(avatarSrc);
+            } else if (avatarSrc) {
+                /* Emoji avatar — display in the initial span & topbar fallback */
+                const initEl = document.getElementById('profileAvatarInitial');
+                initEl.textContent = avatarSrc;
+                initEl.style.fontSize = '2.4rem';
+                initEl.style.display = '';
+                /* Sync topbar: replace fallback text with the emoji */
+                const topbarFallback = document.getElementById('avatarFallback');
+                if (topbarFallback) {
+                    topbarFallback.textContent = avatarSrc;
+                    topbarFallback.style.fontSize = '1.3rem';
+                    topbarFallback.style.lineHeight = '1';
+                }
+            }
+
+            /* ── Genre pills: dynamic from localStorage ── */
+            const pillRow = document.querySelector('.genre-pill-row');
+            if (pillRow) {
+                if (genres.length > 0) {
+                    pillRow.innerHTML = DOMPurify.sanitize(genres
+                        .map(g => `<span class="genre-pill">${g}</span>`)
+                        .join(''));
+                } else {
+                    pillRow.innerHTML = `<span style="font-size:0.82rem;color:var(--text-muted,#8a9aaa);font-style:italic;">No genres selected yet. Complete your profile setup to add some.</span>`;
+                }
+            }
+        }
+
+        /* ── Rename ── */
+        function openNameEdit() {
+            document.getElementById('nameDisplayRow').style.display = 'none';
+            document.getElementById('nameEditRow').classList.add('open');
+            document.getElementById('nameEditInput').focus();
+        }
+        function cancelNameEdit() {
+            document.getElementById('nameDisplayRow').style.display = '';
+            document.getElementById('nameEditRow').classList.remove('open');
+            document.getElementById('nameEditInput').value = localStorage.getItem('orpheus_display_name') || 'Guest';
+        }
+        function saveName() {
+            const val = document.getElementById('nameEditInput').value.trim();
+            if (!val) { showToast('Name cannot be empty'); return; }
+            localStorage.setItem('orpheus_display_name', val);
+            document.getElementById('profileNameDisplay').textContent = val;
+            document.getElementById('profileAvatarInitial').textContent = val.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = val;
+            document.getElementById('avatarFallback').textContent = val.charAt(0).toUpperCase();
+            cancelNameEdit();
+            showToast('Name updated to ' + val);
+        }
+        document.getElementById('nameEditInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter')  saveName();
+            if (e.key === 'Escape') cancelNameEdit();
+        });
+
+        /* ── Bio ── */
+        function openBioEdit() {
+            document.getElementById('bioDisplay').style.display = 'none';
+            document.getElementById('bioEditArea').classList.add('open');
+            const ta = document.getElementById('bioTextarea');
+            ta.value = localStorage.getItem('orpheus_bio') || '';
+            document.getElementById('bioCount').textContent = ta.value.length;
+            ta.focus();
+        }
+        function cancelBioEdit() {
+            document.getElementById('bioDisplay').style.display = '';
+            document.getElementById('bioEditArea').classList.remove('open');
+        }
+        function saveBio() {
+            const val = document.getElementById('bioTextarea').value.trim();
+            localStorage.setItem('orpheus_bio', val);
+            const bioEl = document.getElementById('bioText');
+            if (val) { bioEl.textContent = val; bioEl.classList.remove('bio-placeholder'); }
+            else      { bioEl.textContent = 'Add a short bio…'; bioEl.classList.add('bio-placeholder'); }
+            cancelBioEdit();
+            showToast('Bio saved');
+        }
+
+        /* ── Avatar upload ── */
+        document.getElementById('avatarFileInput').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const src = e.target.result;
+                localStorage.setItem('orpheus_avatar', src);
+
+                /* Update profile circle */
+                const img = document.getElementById('profileAvatarImg');
+                img.src = src; img.style.display = 'block';
+                document.getElementById('profileAvatarInitial').style.display = 'none';
+
+                /* Update topbar avatar immediately */
+                _syncTopbarAvatar(src);
+
+                showToast('Profile picture updated');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* ══════════════════════════════════════════════════════════
+           SUPABASE – Shared config (same keys as home.html)
+           ══════════════════════════════════════════════════════════ */
+        const _PROF_SB_URL = SUPABASE_URL;
+        const _PROF_SB_KEY = SUPABASE_KEY;
+        const _PROF_HEADERS = {
+            'apikey': _PROF_SB_KEY,
+            'Authorization': `Bearer ${_PROF_SB_KEY}`,
+            'Accept': 'application/json'
+        };
+
+        /* Gradient palette for thumbnails */
+        const _PROF_GRADS = [
+            ['#FF9B51','#e8691e'], ['#25343F','#3a5060'], ['#6a4c93','#4a2c73'],
+            ['#e07830','#a04c18'], ['#BFC9D1','#8a9aaa'], ['#1a73e8','#0d47a1'],
+            ['#e53935','#8a1a18'], ['#2e7d32','#1a4a2a'], ['#e65100','#bf360c'],
+            ['#00838f','#004d40']
+        ];
+
+        /* Artist avatar colour palette (same as home.html) */
+        const _PROF_PALETTE = ['#FF9B51','#25343F','#3a6080','#6a4c93','#1a73e8',
+            '#e53935','#2e7d32','#e65100','#6a1b9a','#00838f',
+            '#c62828','#0277bd','#558b2f','#4527a0','#00695c',
+            '#d84315','#283593','#6d4c41','#37474f','#ad1457'];
+
+        function _profAvatarColor(name) {
+            let h = 0;
+            for (const c of name) h = ((h << 5) - h) + c.charCodeAt(0);
+            return _PROF_PALETTE[Math.abs(h) % _PROF_PALETTE.length];
+        }
+
+        function _profInitials(name) {
+            return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        /* Relative time label */
+        function _relativeTime(isoStr) {
+            const diff = Date.now() - new Date(isoStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1)   return 'Just now';
+            if (mins < 60)  return mins + 'm ago';
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24)   return hrs + 'h ago';
+            const days = Math.floor(hrs / 24);
+            if (days === 1) return 'Yesterday';
+            if (days < 7)   return days + 'd ago';
+            return new Date(isoStr).toLocaleDateString();
+        }
+
+        /* HTML-escape helper */
+        function _profEsc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        /* ══ RECENT ACTIVITY — last 5 played songs ══ */
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            if (!container) return;
+
+            try {
+                const sb = window.supabaseClient;
+                if (!sb) throw new Error('Supabase client not ready');
+
+                /* Get current user */
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) {
+                    container.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;font-style:italic;">Sign in to see your recent activity.</div>';
+                    return;
+                }
+
+                /* Fetch last 5 play_history rows */
+                const { data: rows, error } = await sb
+                    .from('play_history')
+                    .select('song_id, title, artist, played_at')
+                    .eq('user_id', user.id)
+                    .order('played_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+                if (!rows || rows.length === 0) {
+                    container.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;font-style:italic;">No recent activity yet — start listening!</div>';
+                    return;
+                }
+
+                /* Fetch cover_url from songs table for these song_ids */
+                const songIds = [...new Set(rows.map(r => r.song_id).filter(Boolean))];
+                let coverMap = {};
+                if (songIds.length) {
+                    const { data: songs } = await sb
+                        .from('songs')
+                        .select('id, cover_url, album')
+                        .in('id', songIds);
+                    if (songs) songs.forEach(s => { coverMap[s.id] = { cover_url: s.cover_url, album: s.album }; });
+                }
+
+                container.innerHTML = DOMPurify.sanitize(rows.map((r, i) => {
+                    const info  = coverMap[r.song_id] || {};
+                    const [c1, c2] = _PROF_GRADS[i % _PROF_GRADS.length];
+                    const thumbStyle = info.cover_url
+                        ? `background-image:url('${info.cover_url}');background-size:cover;background-position:center;`
+                        : `background:linear-gradient(135deg,${c1},${c2})`;
+                    const thumbContent = info.cover_url ? '' : '🎵';
+                    const sub = info.album ? `${_profEsc(r.artist)} · ${_profEsc(info.album)}` : _profEsc(r.artist || 'Unknown Artist');
+                    return `
+                    <div class="activity-item">
+                        <div class="activity-thumb" style="${thumbStyle}">${thumbContent}</div>
+                        <div class="activity-info">
+                            <div class="activity-title">${_profEsc(r.title || 'Unknown Track')}</div>
+                            <div class="activity-sub">${sub}</div>
+                        </div>
+                        <span class="activity-time">${_relativeTime(r.played_at)}</span>
+                    </div>`;
+                }).join(''), {ADD_ATTR: ['style']});
+
+            } catch (err) {
+                console.error('Recent activity error:', err);
+                container.innerHTML = `<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;">Could not load recent activity.<br><small style="opacity:.5">${err.message || err}</small></div>`;
+            }
+        }
+
+        /* ══ RECENTLY PLAYED ARTISTS ══ */
+        async function loadRecentArtists() {
+            const grid = document.getElementById('recentArtistsGrid');
+            if (!grid) return;
+
+            try {
+                const sb = window.supabaseClient;
+                if (!sb) throw new Error('Supabase client not ready');
+
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) {
+                    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;font-style:italic;">Sign in to see your artists.</div>';
+                    return;
+                }
+
+                /* Fetch last 50 play_history rows to extract unique artists */
+                const { data: rows, error } = await sb
+                    .from('play_history')
+                    .select('artist, played_at')
+                    .eq('user_id', user.id)
+                    .order('played_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+                if (!rows || rows.length === 0) {
+                    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;font-style:italic;">No artists yet — start listening!</div>';
+                    return;
+                }
+
+                /* Deduplicate, keep insertion order (most recent first), cap at 10 */
+                const seen = new Set();
+                const uniqueArtists = [];
+                for (const r of rows) {
+                    const name = (r.artist || '').trim();
+                    if (!name || seen.has(name.toLowerCase())) continue;
+                    seen.add(name.toLowerCase());
+                    uniqueArtists.push(name);
+                    if (uniqueArtists.length >= 10) break;
+                }
+
+                if (!uniqueArtists.length) {
+                    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;font-style:italic;">No artists yet.</div>';
+                    return;
+                }
+
+                grid.innerHTML = DOMPurify.sanitize(uniqueArtists.map(name => {
+                    const bg = _profAvatarColor(name);
+                    const ini = _profInitials(name);
+                    return `<div class="following-item">
+                        <div class="following-circle" style="background:${bg}">${ini}</div>
+                        <span class="following-name">${_profEsc(name)}</span>
+                    </div>`;
+                }).join(''), {ADD_ATTR: ['style']});
+
+            } catch (err) {
+                console.error('Recent artists error:', err);
+                grid.innerHTML = `<div style="color:var(--text-muted);font-size:.82rem;padding:16px 0;">Could not load artists.<br><small style="opacity:.5">${err.message || err}</small></div>`;
+            }
+        }
+
+        /* ── Boot: wait for auth, then load everything ── */
+        async function bootProfile() {
+            const sb = window.supabaseClient;
+            if (!sb) {
+                // supabaseClient not ready — retry after short delay
+                setTimeout(bootProfile, 200);
+                return;
+            }
+
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session && session.user) {
+                    // Ensure orpheus_user is set (auth-guard may not have finished)
+                    const orpheusUser = sessionStorage.getItem('orpheus_user');
+                    if (!orpheusUser) {
+                        // Pull username from profile or fallback to email
+                        const { data: prof } = await sb
+                            .from('profiles')
+                            .select('username')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+                        const uname = prof?.username || session.user.user_metadata?.username || session.user.email || 'User';
+                        sessionStorage.setItem('orpheus_user', uname);
+                    }
+                }
+            } catch (e) {
+                console.warn('Profile boot auth check:', e);
+            }
+
+            // Now load everything — orpheus_user should be set
+            loadProfile();
+            loadRecentActivity();
+            loadRecentArtists();
+        }
+
+        // Start after a brief tick to let supabase.js finish
+        if (window.supabaseClient) {
+            bootProfile();
+        } else {
+            setTimeout(bootProfile, 300);
+        }
+    </script>
+<script type="module" src="./accessibility.js"></script>
+</body>
+</html>

@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Orpheus</title>
+    <link rel="icon" href="https://zsnefaffxvktxbibmqaf.supabase.co/storage/v1/object/public/Covers/sidebar_icons/no%20bg%20orpheus.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Settings-specific overrides */
+        .content {
+            overflow-y: auto;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            background: var(--bg-nav);
+            color: #fff;
+            border: 1px solid rgba(255, 155, 81, 0.35);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-family: var(--font-sans);
+            font-size: 0.87rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 28px rgba(37, 52, 63, 0.4);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+
+        /* Setting card blocks */
+        .settings-section {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: background 0.3s;
+        }
+
+        .settings-section .section-heading {
+            margin-bottom: 16px;
+        }
+
+        /* Quality badge */
+        .quality-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 155, 81, 0.12);
+            border: 1.5px solid rgba(255, 155, 81, 0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 0.05em;
+        }
+
+        /* Volume slider (crossfade) */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 140px;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(to right, var(--gold) 0%, var(--gold) 50%, var(--card-border) 50%);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--gold);
+            cursor: pointer;
+            box-shadow: 0 1px 5px rgba(37, 52, 63, 0.2);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--gold);
+            cursor: pointer;
+        }
+
+        .crossfade-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .crossfade-val {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--gold);
+            min-width: 28px;
+        }
+
+        /* ── Two-column grid layout ── */
+        .settings-container {
+            max-width: 100% !important;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto;
+            gap: 0 24px;
+            align-items: start;
+        }
+
+        /* Title spans full width */
+        .settings-title {
+            grid-column: 1 / -1;
+        }
+
+        /* Each section fills its column cell */
+        .settings-section {
+            width: 100%;
+        }
+
+        /* Sections that should always span full width */
+        .settings-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Footer spans full width */
+        .settings-footer {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 860px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-section.full-width {
+                grid-column: 1;
+            }
+
+            .settings-title,
+            .settings-footer {
+                grid-column: 1;
+            }
+        }
+
+        background: var(--bg-body);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+        }
+
+        .account-avatar-big {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .account-detail-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .account-detail-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .danger-btn {
+            background: transparent;
+            border: 1.5px solid #e63946;
+            color: #e63946;
+            border-radius: 10px;
+            padding: 9px 20px;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.04em;
+        }
+
+        .danger-btn:hover {
+            background: rgba(230, 57, 70, 0.1);
+        }
+    </style>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase.js"></script>
+  <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="responsive-patch.css">
+</head>
+
+<body>
+
+    <!-- TOP NAV -->
+    <nav class="top-nav" id="topNav">
+        <a href="home.html" class="nav-left" style="text-decoration:none;">
+            <img src="no bg orpheus 1.svg" alt="Orpheus" class="nav-logo">
+            <span class="nav-brand">ORPHEUS</span>
+        </a>
+        <div class="nav-center">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input class="search-input" type="text" placeholder="Search artists, songs, playlists…">
+            </div>
+        </div>
+        <div class="nav-right">
+            <span class="user-name" id="userName">Guest</span>
+            <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="user-avatar" id="userAvatar">
+                    <span class="avatar-fallback" id="avatarFallback">G</span>
+                </div>
+                <div class="avatar-dropdown" id="avatarDropdown">
+                    <a href="profile.html" class="dropdown-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span>Profile</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="settings.html" class="dropdown-item active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="login.html" class="dropdown-item dropdown-logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Log Out</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+            <div class="settings-container">
+
+                <h1 class="settings-title">Settings</h1>
+
+                <!-- ══ ACCOUNT ══ -->
+                <div class="settings-section full-width">
+                    <h2 class="section-heading">ACCOUNT</h2>
+
+                    <div class="account-info-box">
+                        <div class="account-avatar-big" id="settingsAvatar">G</div>
+                        <div>
+                            <div class="account-detail-label">Logged in as</div>
+                            <div class="account-detail-value" id="settingsUsername">Guest</div>
+                            <div class="account-detail-label" style="margin-top:6px;">Email</div>
+                            <div class="account-detail-value" id="settingsEmail">user@example.com</div>
+                        </div>
+                    </div>
+
+                    <!-- Change Password -->
+                    <div class="setting-block">
+                        <div class="setting-row" style="align-items:flex-start;padding-bottom:0;border-bottom:none;">
+                            <div>
+                                <div class="setting-text" style="font-weight:700">Change Password</div>
+                                <p class="setting-desc">Choose a strong password you haven't used before</p>
+                            </div>
+                        </div>
+                        <div id="pwForm" style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+                            <input id="pwCurrent" type="password" placeholder="Current password"
+                                style="background:var(--bg-body);border:1.5px solid var(--card-border);border-radius:9px;padding:9px 14px;font-family:var(--font-sans);font-size:0.88rem;color:var(--text-dark);outline:none;width:100%;max-width:340px;transition:border-color 0.2s;"
+                                onfocus="this.style.borderColor='var(--gold)'"
+                                onblur="this.style.borderColor='var(--card-border)'">
+                            <input id="pwNew" type="password" placeholder="New password"
+                                style="background:var(--bg-body);border:1.5px solid var(--card-border);border-radius:9px;padding:9px 14px;font-family:var(--font-sans);font-size:0.88rem;color:var(--text-dark);outline:none;width:100%;max-width:340px;transition:border-color 0.2s;"
+                                onfocus="this.style.borderColor='var(--gold)'"
+                                onblur="this.style.borderColor='var(--card-border)'">
+                            <div style="position:relative;max-width:340px;">
+                                <input id="pwConfirm" type="password" placeholder="Confirm new password"
+                                    style="background:var(--bg-body);border:1.5px solid var(--card-border);border-radius:9px;padding:9px 14px;font-family:var(--font-sans);font-size:0.88rem;color:var(--text-dark);outline:none;width:100%;transition:border-color 0.2s;"
+                                    onfocus="this.style.borderColor='var(--gold)'"
+                                    onblur="this.style.borderColor='var(--card-border)'">
+                            </div>
+                            <!-- strength bar -->
+                            <div id="pwStrengthWrap" style="display:none;max-width:340px;">
+                                <div
+                                    style="height:4px;border-radius:2px;background:var(--card-border);overflow:hidden;">
+                                    <div id="pwStrengthBar"
+                                        style="height:100%;width:0%;border-radius:2px;transition:width 0.3s,background 0.3s;">
+                                    </div>
+                                </div>
+                                <span id="pwStrengthLabel"
+                                    style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;display:block;"></span>
+                            </div>
+                            <div id="pwError" style="font-size:0.8rem;color:#e63946;display:none;"></div>
+                            <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+                                <button onclick="changePassword()" class="freq-reset-btn"
+                                    style="padding:9px 24px;font-size:0.78rem;">Update Password</button>
+                                <label
+                                    style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);user-select:none;">
+                                    <input type="checkbox" id="pwShowToggle" style="cursor:pointer;"
+                                        onchange="togglePwVisibility()"> Show passwords
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-block" style="margin-bottom:0;">
+                        <a href="profile.html" class="setting-link">Edit Profile →</a>
+                        <p class="setting-desc">Change display name, bio and profile picture</p>
+                    </div>
+                </div>
+
+                <!-- ══ APPEARANCE ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">APPEARANCE</h2>
+
+                    <div class="setting-row">
+                        <div>
+                            <span class="setting-text" style="font-weight:700">Night Mode</span>
+                            <p class="setting-desc">Switch between light and dark theme</p>
+                        </div>
+                        <label class="toggle" for="toggleNightMode">
+                            <input type="checkbox" id="toggleNightMode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ══ AUDIO & PLAYBACK ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">AUDIO & PLAYBACK</h2>
+
+                    <div class="setting-block">
+                        <h3 class="setting-label">Streaming Quality</h3>
+                        <div class="setting-row">
+                            <div>
+                                <span class="setting-text">Wi-Fi Quality</span>
+                                <p class="setting-desc">Higher quality uses more data</p>
+                            </div>
+                            <div class="custom-select-wrapper">
+                                <button class="custom-select-btn" id="wifiQualityBtn">HIGH</button>
+                                <div class="custom-select-dropdown" id="wifiQualityDropdown">
+                                    <div class="custom-option" data-value="AUTOMATIC">AUTOMATIC</div>
+                                    <div class="custom-option selected" data-value="HIGH">HIGH</div>
+                                    <div class="custom-option" data-value="MEDIUM">MEDIUM</div>
+                                    <div class="custom-option" data-value="LOW">LOW</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <div>
+                                <span class="setting-text">Mobile Data Quality</span>
+                            </div>
+                            <div class="custom-select-wrapper">
+                                <button class="custom-select-btn" id="mobileQualityBtn">MEDIUM</button>
+                                <div class="custom-select-dropdown" id="mobileQualityDropdown">
+                                    <div class="custom-option" data-value="AUTOMATIC">AUTOMATIC</div>
+                                    <div class="custom-option" data-value="HIGH">HIGH</div>
+                                    <div class="custom-option selected" data-value="MEDIUM">MEDIUM</div>
+                                    <div class="custom-option" data-value="LOW">LOW</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-block">
+                        <h3 class="setting-label">Playback</h3>
+
+                        <div class="setting-row">
+                            <div>
+                                <span class="setting-text">Crossfade</span>
+                                <p class="setting-desc">Smoothly blend between songs</p>
+                            </div>
+                            <div class="crossfade-row">
+                                <input type="range" class="range-slider" id="crossfadeSlider" min="0" max="12" value="0"
+                                    step="1" style="display:none">
+                                <span class="crossfade-val" id="crossfadeVal" style="display:none">0s</span>
+                                <label class="toggle" for="toggleCrossfade">
+                                    <input type="checkbox" id="toggleCrossfade">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <span class="setting-text">Gapless Playback</span>
+                            <label class="toggle" for="toggleGapless">
+                                <input type="checkbox" id="toggleGapless" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-row">
+                            <div>
+                                <span class="setting-text">Autoplay</span>
+                                <p class="setting-desc">Continue playing similar songs when queue ends</p>
+                            </div>
+                            <label class="toggle" for="toggleAutoplay">
+                                <input type="checkbox" id="toggleAutoplay" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-row" style="border-bottom:none;">
+                            <div>
+                                <span class="setting-text">Normalize Volume</span>
+                                <p class="setting-desc">Keep consistent volume levels across tracks</p>
+                            </div>
+                            <label class="toggle" for="toggleNormalize">
+                                <input type="checkbox" id="toggleNormalize" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ STORAGE & DATA ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">STORAGE & DATA</h2>
+
+                    <div class="setting-row">
+                        <div>
+                            <span class="setting-text" style="font-weight:700">Data Saver</span>
+                            <p class="setting-desc">Reduces streaming quality to save mobile data</p>
+                        </div>
+                        <label class="toggle" for="toggleDataSaver">
+                            <input type="checkbox" id="toggleDataSaver">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row" style="border-bottom:none;">
+                        <div>
+                            <span class="setting-text" style="font-weight:700">Clear Cache</span>
+                            <p class="setting-desc">Remove locally stored data from this browser</p>
+                        </div>
+                        <button class="danger-btn" onclick="clearCache()">Clear Now</button>
+                    </div>
+                </div>
+
+                <!-- ══ NOTIFICATIONS ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">NOTIFICATIONS</h2>
+
+                    <div class="setting-row">
+                        <div>
+                            <span class="setting-text">New Releases</span>
+                            <p class="setting-desc">Get notified when followed artists release new music</p>
+                        </div>
+                        <label class="toggle" for="toggleNewReleases">
+                            <input type="checkbox" id="toggleNewReleases" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row" style="border-bottom:none;">
+                        <div>
+                            <span class="setting-text">Playlist Updates</span>
+                            <p class="setting-desc">Receive updates when saved playlists are modified</p>
+                        </div>
+                        <label class="toggle" for="togglePlaylistUpdates">
+                            <input type="checkbox" id="togglePlaylistUpdates" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ══ PRIVACY ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">PRIVACY</h2>
+
+                    <div class="setting-row">
+                        <div>
+                            <span class="setting-text">Public Listening Activity</span>
+                            <p class="setting-desc">Show others what you're currently playing</p>
+                        </div>
+                        <label class="toggle" for="toggleListening">
+                            <input type="checkbox" id="toggleListening" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <span class="setting-text">Filter Explicit Content</span>
+                            <p class="setting-desc">Hide songs and podcasts marked as explicit</p>
+                        </div>
+                        <label class="toggle" for="toggleExplicit">
+                            <input type="checkbox" id="toggleExplicit">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row" style="border-bottom:none;">
+                        <div>
+                            <span class="setting-text">Personalised Recommendations</span>
+                            <p class="setting-desc">Use listening history to improve suggestions</p>
+                        </div>
+                        <label class="toggle" for="togglePersonalised">
+                            <input type="checkbox" id="togglePersonalised" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ══ ABOUT ══ -->
+                <div class="settings-section">
+                    <h2 class="section-heading">ABOUT & SUPPORT</h2>
+                    <div class="setting-block">
+                        <a href="terms.html" class="setting-link">Terms of Service</a>
+                        <p class="setting-desc">Review the terms and conditions governing your use</p>
+                    </div>
+                    <div class="setting-block">
+                        <a href="privacy.html" class="setting-link">Privacy Policy</a>
+                        <p class="setting-desc">Learn how we collect and protect your data</p>
+                    </div>
+                    <div class="setting-block">
+                        <a href="contact.html" class="setting-link">Contact &amp; About</a>
+                        <p class="setting-desc">Meet the team, get support, or report a bug</p>
+                    </div>
+                    <div class="setting-block" style="margin-bottom:0;">
+                        <div class="setting-row" style="border-bottom:none;padding-top:0">
+                            <span class="setting-text">Version</span>
+                            <span class="quality-badge">v1.0.0 Web</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger zone -->
+                <div class="settings-section full-width" style="border-color:rgba(230,57,70,0.2);">
+                    <h2 class="section-heading" style="color:#e63946;">DANGER ZONE</h2>
+                    <div class="setting-row" style="border-bottom:none;">
+                        <div>
+                            <span class="setting-text" style="font-weight:700;color:#e63946">Delete Account</span>
+                            <p class="setting-desc">Permanently remove your account and all data</p>
+                        </div>
+                        <button class="danger-btn" onclick="confirmDelete()">Delete Account</button>
+                    </div>
+                </div>
+
+                <div class="settings-footer">Orpheus © 2026 &nbsp;·&nbsp; Version 1.0.0 Web</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span class="toast-icon">✓</span>
+        <span id="toastMsg">Setting saved</span>
+    </div>
+
+
+    <script src="sidebar.js"></script>
+    <script src="player.js"></script>
+    <script>
+        /* ──────────────────────────────
+           HELPERS
+        ────────────────────────────── */
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        function savePref(key, val) {
+            localStorage.setItem('orpheus_pref_' + key, JSON.stringify(val));
+        }
+        function loadPref(key, def) {
+            const v = localStorage.getItem('orpheus_pref_' + key);
+            return v !== null ? JSON.parse(v) : def;
+        }
+
+        /* ──────────────────────────────
+           NIGHT MODE (wired to toggle + sidebar)
+        ────────────────────────────── */
+        const nmToggle = document.getElementById('toggleNightMode');
+
+        function syncNightModeUI() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            nmToggle.checked = isDark;
+            document.querySelectorAll('.nm-icon').forEach(el => el.textContent = isDark ? '☀️' : '🌙');
+        }
+
+        nmToggle.addEventListener('change', function () {
+            document.documentElement.setAttribute('data-theme', this.checked ? 'dark' : 'light');
+            localStorage.setItem('orpheus_theme', this.checked ? 'dark' : 'light');
+            document.querySelectorAll('.nm-icon').forEach(el => el.textContent = this.checked ? '☀️' : '🌙');
+            showToast(this.checked ? 'Night mode enabled' : 'Light mode enabled');
+        });
+
+        /* ──────────────────────────────
+           CUSTOM SELECT DROPDOWNS
+        ────────────────────────────── */
+        document.querySelectorAll('.custom-select-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+                    if (w !== this.parentElement) w.classList.remove('open');
+                });
+                this.parentElement.classList.toggle('open');
+            });
+        });
+
+        document.querySelectorAll('.custom-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                const wrapper = this.closest('.custom-select-wrapper');
+                const btn = wrapper.querySelector('.custom-select-btn');
+                wrapper.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                btn.textContent = this.dataset.value;
+                wrapper.classList.remove('open');
+                // Save
+                const id = btn.id.replace('Btn', '');
+                savePref(id, this.dataset.value);
+                showToast('Quality set to ' + this.dataset.value.toLowerCase());
+                // If data saver is on, warn quality is overridden
+                if (document.getElementById('toggleDataSaver').checked) {
+                    showToast('Data Saver active — quality may be limited');
+                }
+            });
+        });
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-wrapper.open').forEach(w => w.classList.remove('open'));
+        });
+
+        /* ──────────────────────────────
+           CROSSFADE
+        ────────────────────────────── */
+        const crossfadeToggle = document.getElementById('toggleCrossfade');
+        const crossfadeSlider = document.getElementById('crossfadeSlider');
+        const crossfadeVal = document.getElementById('crossfadeVal');
+
+        crossfadeToggle.addEventListener('change', function () {
+            crossfadeSlider.style.display = this.checked ? 'block' : 'none';
+            crossfadeVal.style.display = this.checked ? 'block' : 'none';
+            savePref('crossfade', this.checked);
+            showToast(this.checked ? 'Crossfade enabled' : 'Crossfade disabled');
+        });
+
+        crossfadeSlider.addEventListener('input', function () {
+            crossfadeVal.textContent = this.value + 's';
+            const pct = (this.value / this.max) * 100;
+            this.style.background = `linear-gradient(to right, var(--gold) 0%, var(--gold) ${pct}%, var(--card-border) ${pct}%)`;
+            savePref('crossfadeSec', this.value);
+            showToast('Crossfade: ' + this.value + 's');
+        });
+
+        /* ──────────────────────────────
+           SIMPLE TOGGLE SETTINGS
+        ────────────────────────────── */
+        const simpleToggles = [
+            { id: 'toggleGapless', key: 'gapless', on: 'Gapless playback on', off: 'Gapless playback off' },
+            { id: 'toggleAutoplay', key: 'autoplay', on: 'Autoplay enabled', off: 'Autoplay disabled' },
+            { id: 'toggleNormalize', key: 'normalize', on: 'Volume normalisation on', off: 'Volume normalisation off' },
+            { id: 'toggleDataSaver', key: 'dataSaver', on: 'Data saver enabled — quality may be limited', off: 'Data saver disabled' },
+            { id: 'toggleNewReleases', key: 'newReleases', on: 'New release alerts on', off: 'New release alerts off' },
+            { id: 'togglePlaylistUpdates', key: 'playlistUpd', on: 'Playlist update alerts on', off: 'Playlist update alerts off' },
+            { id: 'toggleListening', key: 'pubListening', on: 'Listening activity public', off: 'Listening activity private' },
+            { id: 'toggleExplicit', key: 'explicit', on: 'Explicit content hidden', off: 'Explicit content visible' },
+            { id: 'togglePersonalised', key: 'personalised', on: 'Personalised recs on', off: 'Personalised recs off' },
+        ];
+
+        simpleToggles.forEach(({ id, key, on, off }) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // Load saved
+            el.checked = loadPref(key, el.checked);
+            el.addEventListener('change', function () {
+                savePref(key, this.checked);
+                showToast(this.checked ? on : off);
+            });
+        });
+
+        /* ──────────────────────────────
+           CHANGE PASSWORD
+        ────────────────────────────── */
+        function pwStrength(pw) {
+            let score = 0;
+            if (pw.length >= 8) score++;
+            if (pw.length >= 12) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+            return score; // 0-5
+        }
+
+        document.getElementById('pwNew').addEventListener('input', function () {
+            const wrap = document.getElementById('pwStrengthWrap');
+            const bar = document.getElementById('pwStrengthBar');
+            const label = document.getElementById('pwStrengthLabel');
+            if (!this.value) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+            const score = pwStrength(this.value);
+            const pct = (score / 5) * 100;
+            const colors = ['#e63946', '#e63946', '#f4a261', '#FF9B51', '#2a9d8f', '#2a9d8f'];
+            const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'];
+            bar.style.width = pct + '%';
+            bar.style.background = colors[score];
+            label.textContent = labels[score];
+            label.style.color = colors[score];
+        });
+
+        function togglePwVisibility() {
+            const show = document.getElementById('pwShowToggle').checked;
+            const type = show ? 'text' : 'password';
+            ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => {
+                document.getElementById(id).type = type;
+            });
+        }
+
+        function changePassword() {
+            const current = document.getElementById('pwCurrent').value;
+            const nw = document.getElementById('pwNew').value;
+            const confirm = document.getElementById('pwConfirm').value;
+            const errEl = document.getElementById('pwError');
+
+            const showErr = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+            const hideErr = () => { errEl.style.display = 'none'; };
+            hideErr();
+
+            // Validation
+            if (!current) { showErr('Please enter your current password.'); return; }
+            if (nw.length < 8) { showErr('New password must be at least 8 characters.'); return; }
+            if (nw === current) { showErr('New password must differ from your current password.'); return; }
+            if (nw !== confirm) { showErr('Passwords do not match.'); return; }
+
+            // Simulate save (real apps would call an API here)
+            localStorage.setItem('orpheus_password_hash', btoa(nw));
+
+            // Clear fields
+            ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('pwStrengthWrap').style.display = 'none';
+            document.getElementById('pwShowToggle').checked = false;
+            togglePwVisibility();
+
+            showToast('Password updated successfully');
+        }
+
+        /* ──────────────────────────────
+           CLEAR CACHE
+        ────────────────────────────── */
+        function clearCache() {
+            // Clear only Orpheus prefs, not auth / liked songs
+            const keepKeys = ['orpheus_theme', 'orpheus_display_name', 'orpheus_liked_songs'];
+            Object.keys(localStorage).forEach(k => {
+                if (k.startsWith('orpheus_pref_')) localStorage.removeItem(k);
+            });
+            showToast('Cache cleared — settings reset to defaults');
+            // Re-load page after short delay
+            setTimeout(() => location.reload(), 1400);
+        }
+
+        /* ──────────────────────────────
+           DELETE ACCOUNT
+        ────────────────────────────── */
+        async function confirmDelete() {
+            if (!confirm('Are you sure you want to permanently delete your account? This cannot be undone.')) return;
+
+            try {
+                // Use supabaseClient from global scope (defined in supabase.js)
+                const sb = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
+                if (!sb) { alert('Supabase client not loaded. Please refresh this page.'); return; }
+
+                // Get the current user's ID
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) {
+                    alert('No active session found. Please log in first.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const uid = user.id;
+
+                showToast('Deleting your account…');
+
+                // Delete user data from all tables (RLS policies allow users to delete their own rows)
+                await sb.from('play_history').delete().eq('user_id', uid);
+                await sb.from('liked_songs').delete().eq('user_id', uid);
+                await sb.from('profiles').delete().eq('id', uid);
+
+                // Sign out the Supabase session
+                await sb.auth.signOut();
+
+                // Clear all local data
+                localStorage.clear();
+                sessionStorage.clear();
+
+                alert('Your account and all associated data have been permanently deleted.');
+                window.location.href = 'login.html';
+            } catch (err) {
+                console.error('Account deletion error:', err);
+                alert('Failed to delete account: ' + (err.message || 'Unknown error. Check the console.'));
+            }
+        }
+
+        /* ──────────────────────────────
+           LOAD SAVED QUALITY SETTINGS
+        ────────────────────────────── */
+        ['wifiQuality', 'mobileQuality'].forEach(id => {
+            const saved = loadPref(id, null);
+            if (saved) {
+                const btn = document.getElementById(id + 'Btn');
+                const dropdown = document.getElementById(id + 'Dropdown');
+                if (btn) btn.textContent = saved;
+                if (dropdown) {
+                    dropdown.querySelectorAll('.custom-option').forEach(opt => {
+                        opt.classList.toggle('selected', opt.dataset.value === saved);
+                    });
+                }
+            }
+        });
+
+        /* ──────────────────────────────
+           LOAD NIGHT MODE STATE
+        ────────────────────────────── */
+        syncNightModeUI();
+
+        /* ──────────────────────────────
+           LOAD DISPLAY NAME
+        ────────────────────────────── */
+        const savedName = localStorage.getItem('orpheus_display_name') || 'Guest';
+        document.getElementById('settingsUsername').textContent = savedName;
+        document.getElementById('userName').textContent = savedName;
+        document.getElementById('settingsAvatar').textContent = savedName.charAt(0).toUpperCase();
+        document.getElementById('avatarFallback').textContent = savedName.charAt(0).toUpperCase();
+
+        /* ──────────────────────────────
+           LOAD CROSSFADE STATE
+        ────────────────────────────── */
+        const cfSaved = loadPref('crossfade', false);
+        crossfadeToggle.checked = cfSaved;
+        if (cfSaved) {
+            crossfadeSlider.style.display = 'block';
+            crossfadeVal.style.display = 'block';
+            const cfSec = loadPref('crossfadeSec', 0);
+            crossfadeSlider.value = cfSec;
+            crossfadeVal.textContent = cfSec + 's';
+            const pct2 = (cfSec / crossfadeSlider.max) * 100;
+            crossfadeSlider.style.background = `linear-gradient(to right, var(--gold) 0%, var(--gold) ${pct2}%, var(--card-border) ${pct2}%)`;
+        }
+
+    </script>
+<script type="module" src="./accessibility.js"></script>
+</body>
+
+</html>
