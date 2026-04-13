@@ -2443,12 +2443,14 @@ body {
 }
 
 @media (max-width:480px) {
+    /* Sidebar is now a hamburger drawer on small phones — see sidebar.js */
     .sidebar {
-        display: none
+        display: flex;
+        width: 48px
     }
 
     .content {
-        margin-left: 0
+        margin-left: 48px
     }
 
     .genre-grid {
