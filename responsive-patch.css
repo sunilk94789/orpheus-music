@@ -170,6 +170,39 @@ body {
     padding: 10px 0 !important;
   }
 
+  /* ── When drawer is open (mobile-open class added by sidebar.js) ── */
+  .sidebar.mobile-open .nav-label,
+  .sidebar.mobile-open .sidebar-section-lbl,
+  .sidebar.mobile-open .sidebar-divider,
+  .sidebar.mobile-open .sidebar-nightmode .nm-label {
+    display: flex !important;
+  }
+
+  .sidebar.mobile-open .sidebar-nightmode .nm-toggle {
+    display: inline-block !important;
+  }
+
+  .sidebar.mobile-open .sidebar-item,
+  .sidebar.mobile-open .nav-btn {
+    justify-content: flex-start !important;
+    padding: 12px 20px !important;
+    gap: 14px !important;
+  }
+
+  .sidebar.mobile-open .sidebar-nightmode {
+    justify-content: flex-start !important;
+    padding: 12px 20px !important;
+    gap: 14px !important;
+  }
+
+  /* Sidebar-bottom: always stick to bottom of drawer */
+  .sidebar .sidebar-bottom {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-sidebar, #25343F) !important;
+    padding-bottom: 16px !important;
+  }
+
   /* ── TOPBAR ── */
   .topbar,
   .top-nav {
@@ -390,8 +423,25 @@ body {
     border-radius: 14px !important;
   }
 
+  /* Redefine grid now that artist + duration cols are gone:
+     # | title (fills free space) | like */
   .eq-row {
-    padding: 10px 4px !important;
+    grid-template-columns: 28px 1fr 36px !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+
+  /* Critical: allow title cell to shrink so text truncates */
+  .eq-col-title {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .eq-song-name {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
   }
 
   .eq-volume-row {
@@ -863,6 +913,13 @@ body {
   /* ── Sidebar stays on left, narrower icon strip ── */
   .sidebar {
     width: 48px !important;
+  }
+
+  /* When hamburger drawer is open: full-width slide-in panel */
+  .sidebar.mobile-open {
+    width: 220px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   .content {
