@@ -2,8 +2,8 @@
  * responsive-patch.css
  * ─────────────────────────────────────────────────────────────
  * Mobile-first responsive overrides for ORPHEUS.
- * Targets the core layout pages that lack small-screen CSS:
- *   home.html, profile.html, genre pages.
+ * Covers ALL pages: auth, home, now-playing, equalizer, echo,
+ * profile, settings, genre, liked, contact/legal.
  *
  * HOW TO ADD
  * ----------
@@ -11,8 +11,11 @@
  * AFTER your existing stylesheet links:
  *   <link rel="stylesheet" href="responsive-patch.css">
  *
- * WHY THIS MATTERS (QA report — TC-U10, Disadvantage #7 — severity MEDIUM)
- * The core layout pages are desktop-first and break below 768px.
+ * BREAKPOINTS
+ * -----------
+ *   ≤ 1024px  →  Tablet
+ *   ≤ 768px   →  Mobile
+ *   ≤ 480px   →  Small phone
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -30,6 +33,7 @@ img {
 body {
   overflow-x: hidden;
 }
+
 
 /* ════════════════════════════════════════════════════════════
    TABLET  (≤ 1024px)
@@ -52,9 +56,15 @@ body {
   /* Main content fills the freed space */
   .main-content,
   .content-area,
-  #main-content {
+  #main-content,
+  .content {
     margin-left: 72px !important;
     width: calc(100% - 72px) !important;
+  }
+
+  /* Home page body */
+  .page-body {
+    left: 72px !important;
   }
 
   /* Card grids: from 4-5 columns → 3 */
@@ -64,53 +74,258 @@ body {
   .album-grid {
     grid-template-columns: repeat(3, 1fr) !important;
   }
+
+  /* Home albums grid */
+  .albums-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Genre grid */
+  .genre-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Equalizer layout */
+  .eq-layout {
+    gap: 16px !important;
+  }
+
+  .eq-player {
+    flex: 0 0 280px !important;
+  }
+
+  /* Frequency EQ */
+  .freq-right {
+    flex: 0 0 220px !important;
+  }
+
+  /* Now-playing sidebar label hidden */
+  .sidebar-section-lbl {
+    display: none !important;
+  }
+
+  .sidebar-nightmode .nm-label,
+  .sidebar-nightmode .nm-toggle {
+    display: none !important;
+  }
+
+  .sidebar-item,
+  .nav-btn {
+    justify-content: center !important;
+    padding: 12px 0 !important;
+  }
+
+  .sidebar-item.active,
+  .nav-btn.active {
+    border-left: none !important;
+    padding-left: 0 !important;
+  }
+
+  .sidebar-nightmode {
+    justify-content: center !important;
+    padding: 12px 0 !important;
+  }
 }
+
 
 /* ════════════════════════════════════════════════════════════
    MOBILE  (≤ 768px)
    ════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Sidebar becomes a bottom navigation bar */
+  /* ── SIDEBAR stays on the LEFT as a thin icon strip ── */
   .sidebar {
-    position: fixed !important;
-    bottom: 0 !important;
-    top: auto !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 60px !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-around !important;
-    border-top: 1px solid rgba(255,255,255,0.08) !important;
-    border-right: none !important;
-    z-index: 200 !important;
-    padding: 0 8px !important;
+    width: 56px !important;
+    overflow: hidden !important;
+    overflow-y: auto !important;
   }
 
   .sidebar .nav-label,
   .sidebar .nav-text,
   .sidebar .sidebar-logo-text,
   .sidebar .user-section,
-  .sidebar .sidebar-logo {
+  .sidebar .sidebar-logo,
+  .sidebar .sidebar-section-lbl,
+  .sidebar .sidebar-divider,
+  .sidebar .sidebar-nightmode .nm-label,
+  .sidebar .sidebar-nightmode .nm-toggle {
     display: none !important;
   }
 
-  .sidebar .nav-item,
-  .sidebar .sidebar-nav-item {
-    flex-direction: column !important;
-    align-items: center !important;
-    font-size: 10px !important;
-    padding: 6px 12px !important;
+  .sidebar .sidebar-item,
+  .sidebar .nav-btn {
+    justify-content: center !important;
+    padding: 10px 0 !important;
   }
 
-  /* Main content: no left margin, pad bottom for nav bar */
+  .sidebar .sidebar-item.active,
+  .sidebar .nav-btn.active {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-radius: 10px !important;
+  }
+
+  .sidebar .sidebar-nightmode {
+    justify-content: center !important;
+    padding: 10px 0 !important;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar,
+  .top-nav {
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+
+  .nav-brand {
+    display: none !important;
+  }
+
+  .nav-center {
+    padding: 0 8px !important;
+  }
+
+  .search-bar {
+    padding: 8px 14px !important;
+    gap: 8px !important;
+  }
+
+  .search-input {
+    font-size: 14px !important;
+  }
+
+  .user-name {
+    display: none !important;
+  }
+
+  /* ── MAIN CONTENT — offset by sidebar width ── */
   .main-content,
   .content-area,
-  #main-content {
-    margin-left: 0 !important;
+  #main-content,
+  .content {
+    margin-left: 56px !important;
+    width: calc(100% - 56px) !important;
+  }
+
+  .content {
+    padding: 16px 14px 24px !important;
+    gap: 18px !important;
+  }
+
+  /* Home page body */
+  .page-body {
+    left: 56px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     HOME PAGE
+     ────────────────────────────────────── */
+
+  /* Welcome banner */
+  .welcome-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 20px 20px !important;
+    gap: 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .welcome-text h2 {
+    font-size: 18px !important;
+  }
+
+  .welcome-text p {
+    font-size: 13px !important;
+  }
+
+  .banner-stats {
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .stat-num {
+    font-size: 18px !important;
+  }
+
+  .stat-lbl {
+    font-size: 9px !important;
+  }
+
+  /* Artist circles */
+  .artist-circle {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+  }
+
+  .artist-name {
+    font-size: 11px !important;
+    max-width: 72px !important;
+  }
+
+  .artist-row {
+    gap: 14px !important;
+  }
+
+  /* Section titles */
+  .section-title,
+  .section-label {
+    font-size: 10px !important;
+    letter-spacing: 1.5px !important;
+  }
+
+  /* Albums grid */
+  .albums-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Playlist grid */
+  .playlist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Tab content */
+  .tab-content {
+    max-height: none !important;
+    padding: 12px !important;
+  }
+
+  .tabs-header {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+
+  .tab-btn {
+    padding: 12px 6px !important;
+    font-size: 8px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Sections padding */
+  .artists-section,
+  .top-artists-section,
+  .albums-section,
+  .tabs-panel {
+    padding: 14px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Country dropdown */
+  .custom-dropdown {
     width: 100% !important;
-    padding-bottom: 80px !important;
+  }
+
+  .dropdown-trigger {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+
+  .country-menu {
+    max-height: 260px !important;
   }
 
   /* Card grids: 2 columns on mobile */
@@ -122,27 +337,494 @@ body {
     gap: 10px !important;
   }
 
-  /* Banner / hero area */
-  .banner,
-  .hero-banner,
-  #greeting-banner {
-    padding: 20px 16px !important;
+
+  /* ──────────────────────────────────────
+     NOW-PLAYING / EQUALIZER PAGE
+     ────────────────────────────────────── */
+  .eq-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .eq-player {
+    flex: none !important;
+    width: 100% !important;
+    order: -1 !important;
+  }
+
+  .eq-queue {
+    width: 100% !important;
+  }
+
+  .eq-album-art {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  .eq-cover-box {
+    padding: 20px 16px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .eq-controls-box {
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .eq-play-btn {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  /* Hide less-important queue columns */
+  .eq-col-artist {
+    display: none !important;
+  }
+
+  .eq-col-dur {
+    display: none !important;
+  }
+
+  .eq-queue-card {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .eq-row {
+    padding: 10px 4px !important;
+  }
+
+  .eq-volume-row {
+    gap: 4px !important;
+  }
+
+  /* Queue panel */
+  .eq-queue-panel.open {
+    max-height: 300px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     FREQUENCY EQUALIZER PAGE
+     ────────────────────────────────────── */
+  .freq-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .freq-right {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .freq-sliders-area {
+    height: 200px !important;
+  }
+
+  .freq-sliders-card {
+    padding: 18px 14px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .freq-hz-labels span {
+    font-size: 0.55rem !important;
+    padding: 2px 3px !important;
+  }
+
+  .freq-db-labels span {
+    font-size: 0.6rem !important;
+    padding: 3px 5px !important;
+  }
+
+  .freq-bottom-row {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .freq-reset-btn {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .freq-mini-player {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .freq-mini-art {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .freq-presets {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .freq-preset-btn {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 0 !important;
+  }
+
+  .freq-spatial-card {
+    border-radius: 12px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     ECHO ANALYTICS PAGE
+     ────────────────────────────────────── */
+  .echo-layout {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .echo-chart-area {
+    width: 100% !important;
+    align-items: center !important;
+  }
+
+  .donut-chart {
+    width: 260px !important;
+    height: 260px !important;
+  }
+
+  .donut-hole {
+    width: 90px !important;
+    height: 90px !important;
+  }
+
+  .chart-legend {
+    max-width: 100% !important;
+  }
+
+  .echo-tracks-area {
+    width: 100% !important;
+  }
+
+  .echo-tracks-card {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     PROFILE PAGE
+     ────────────────────────────────────── */
+  .profile-header {
     flex-direction: column !important;
     text-align: center !important;
-    min-height: auto !important;
+    gap: 16px !important;
+    padding: 20px 0 !important;
   }
 
-  .banner h1,
-  .banner-title {
-    font-size: clamp(1.2rem, 5vw, 2rem) !important;
+  .profile-avatar {
+    width: 80px !important;
+    height: 80px !important;
   }
 
-  .banner-stats {
-    justify-content: center !important;
+  .profile-name-box {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .profile-cards {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .profile-card {
+    border-radius: 14px !important;
+    padding: 18px !important;
+  }
+
+  .profile-container,
+  .settings-container {
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+
+  .profile-sidebar,
+  .settings-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     SETTINGS PAGE
+     ────────────────────────────────────── */
+  .settings-container {
+    max-width: 100% !important;
+  }
+
+  .settings-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 24px !important;
+  }
+
+  .setting-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+
+  .setting-row .toggle,
+  .setting-row .custom-select-wrapper {
+    align-self: flex-start !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     LIKED SONGS PAGE
+     ────────────────────────────────────── */
+  .track-item {
+    padding: 8px 10px !important;
+    gap: 10px !important;
+  }
+
+  .track-duration,
+  .track-plays {
+    display: none !important;
+  }
+
+  .track-thumb {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .track-name,
+  .track-title {
+    font-size: 13px !important;
+  }
+
+  .track-artist {
+    font-size: 11px !important;
+  }
+
+  .welcome-title {
+    font-size: 1.5rem !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     GENRE PAGE
+     ────────────────────────────────────── */
+  .genre-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px !important;
   }
 
-  /* Horizontal scrollers (trending row) */
+  .genre-container {
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .genre-controls {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+
+  .filter-tabs {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .page-header {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .page-title {
+    font-size: 1.4rem !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     CONTACT / LEGAL PAGES
+     ────────────────────────────────────── */
+  .legal-content {
+    padding: 0 4px !important;
+  }
+
+  .legal-hero,
+  .contact-hero {
+    padding: 24px 16px !important;
+  }
+
+  .legal-hero h1 {
+    font-size: 1.3rem !important;
+  }
+
+  .team-grid,
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .college-card {
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 20px 16px !important;
+  }
+
+  .security-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .legal-footer {
+    font-size: 0.72rem !important;
+    padding: 16px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     ALL-ARTISTS PAGE
+     ────────────────────────────────────── */
+  .all-artists-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     MUSIC PLAYER BAR (bottom)
+     ────────────────────────────────────── */
+  .player-panel,
+  #player-panel,
+  .now-playing-bar {
+    left: 56px !important;
+    width: calc(100% - 56px) !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     TOASTS & MODALS
+     ────────────────────────────────────── */
+  .toast {
+    left: 16px !important;
+    right: 16px !important;
+    transform: translateY(80px) !important;
+    max-width: none !important;
+    white-space: normal !important;
+    text-align: center !important;
+    font-size: 13px !important;
+    bottom: 32px !important;
+  }
+
+  .toast.show {
+    transform: translateY(0) !important;
+  }
+
+  /* Modals */
+  .modal-box {
+    margin: 16px !important;
+    max-width: calc(100vw - 32px) !important;
+    padding: 28px 20px !important;
+    border-radius: 16px !important;
+  }
+
+  .modal-close {
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .otp-box {
+    margin: 16px !important;
+    max-width: calc(100vw - 32px) !important;
+    padding: 28px 20px 24px !important;
+    border-radius: 18px !important;
+  }
+
+  .otp-close {
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .otp-inputs {
+    gap: 6px !important;
+  }
+
+  .otp-digit {
+    width: 42px !important;
+    height: 50px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+  }
+
+  .otp-icon {
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 24px !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     AUTH PAGES (Login / Signup)
+     The left panel is already hidden by auth.css @ 860px.
+     These rules fix the form side for small screens.
+     ────────────────────────────────────── */
+  .auth-form-side {
+    padding: 24px 16px !important;
+    align-items: flex-start !important;
+  }
+
+  .auth-box {
+    max-width: 100% !important;
+  }
+
+  .auth-title {
+    font-size: 20px !important;
+  }
+
+  .auth-header {
+    margin-bottom: 20px !important;
+  }
+
+  .step-indicator {
+    margin-bottom: 18px !important;
+  }
+
+  /* Genre picker on signup — 3 per row */
+  .genre-picker {
+    gap: 6px !important;
+  }
+
+  .genre-tag {
+    padding: 5px 11px !important;
+    font-size: 11px !important;
+  }
+
+  /* Avatar picker */
+  .avatar-picker {
+    gap: 8px !important;
+  }
+
+  .avatar-opt {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+  }
+
+  .social-row {
+    flex-direction: column !important;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr !important;
+  }
+
+
+  /* ──────────────────────────────────────
+     HORIZONTAL SCROLLERS
+     ────────────────────────────────────── */
   .scroll-row,
   .trending-scroll,
   .tab-content-scroll {
@@ -156,41 +838,10 @@ body {
     display: none !important;
   }
 
-  /* Top Artists dropdown */
-  .country-dropdown,
-  .artist-country-select {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
 
-  /* Music player — pin to bottom above nav bar */
-  .player-panel,
-  #player-panel,
-  .now-playing-bar {
-    bottom: 60px !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    border-radius: 12px 12px 0 0 !important;
-  }
-
-  /* Profile page */
-  .profile-container,
-  .settings-container {
-    flex-direction: column !important;
-    padding: 16px !important;
-  }
-
-  .profile-sidebar,
-  .settings-sidebar {
-    width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-    padding-bottom: 16px !important;
-    margin-bottom: 16px !important;
-  }
-
-  /* Equalizer */
+  /* ──────────────────────────────────────
+     EQUALIZER TAB PAGE (tabs component)
+     ────────────────────────────────────── */
   .eq-container,
   #equalizer-panel {
     flex-wrap: wrap !important;
@@ -203,12 +854,52 @@ body {
   }
 }
 
+
 /* ════════════════════════════════════════════════════════════
    SMALL MOBILE  (≤ 480px)
    ════════════════════════════════════════════════════════════ */
 @media (max-width: 480px) {
 
-  /* Single column layout */
+  /* ── Sidebar stays on left, narrower icon strip ── */
+  .sidebar {
+    width: 48px !important;
+  }
+
+  .content {
+    margin-left: 48px !important;
+    width: calc(100% - 48px) !important;
+    padding: 12px 10px 24px !important;
+  }
+
+  .page-body {
+    left: 48px !important;
+  }
+
+
+  /* ── Topbar ── */
+  .topbar,
+  .top-nav {
+    padding: 0 10px !important;
+    height: 56px !important;
+  }
+
+  .nav-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .search-bar {
+    padding: 7px 12px !important;
+    border-radius: 24px !important;
+  }
+
+  .user-avatar {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+
+  /* ── Single-column grids ── */
   .card-grid,
   .songs-grid,
   .artist-grid,
@@ -216,7 +907,69 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* Larger touch targets */
+  .genre-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .albums-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .playlist-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .all-artists-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+
+  /* ── Home page ── */
+  .welcome-banner {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .welcome-text h2 {
+    font-size: 16px !important;
+  }
+
+  .banner-stats {
+    display: none !important;
+  }
+
+  .wb-btn {
+    padding: 8px 16px !important;
+    font-size: 8px !important;
+  }
+
+  .artist-circle {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+  }
+
+  .artist-name {
+    font-size: 10px !important;
+    max-width: 60px !important;
+  }
+
+  .section-title,
+  .section-label {
+    font-size: 9px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .see-all-btn {
+    font-size: 10px !important;
+  }
+
+
+  /* ── Larger touch targets ── */
   button,
   .btn,
   [role="button"] {
@@ -224,11 +977,227 @@ body {
     min-width: 44px !important;
   }
 
-  /* OTP input sizing */
-  .otp-input,
-  .otp-digit {
+  /* Fix auth submit buttons */
+  .auth-submit,
+  .btn-back-step {
+    min-width: unset !important;
+  }
+
+
+  /* ── Now-playing ── */
+  .eq-album-art {
+    width: 140px !important;
+    height: 140px !important;
+  }
+
+  .eq-play-btn {
     width: 42px !important;
-    height: 50px !important;
+    height: 42px !important;
+  }
+
+  .eq-controls {
+    gap: 6px !important;
+  }
+
+
+  /* ── Echo ── */
+  .donut-chart {
+    width: 200px !important;
+    height: 200px !important;
+  }
+
+  .donut-hole {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .echo-track-item {
+    padding: 10px 10px !important;
+    gap: 10px !important;
+  }
+
+
+  /* ── Frequency EQ ── */
+  .freq-sliders-area {
+    height: 170px !important;
+  }
+
+  .freq-title {
+    font-size: 1.1rem !important;
+  }
+
+  .freq-slider::-webkit-slider-thumb {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+
+  /* ── Profile ── */
+  .profile-avatar {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .welcome-title {
     font-size: 1.2rem !important;
+  }
+
+
+  /* ── Settings ── */
+  .settings-title {
+    font-size: 1.2rem !important;
+  }
+
+  .setting-label {
+    font-size: 0.9rem !important;
+  }
+
+  .setting-desc {
+    font-size: 0.8rem !important;
+  }
+
+
+  /* ── Genre page ── */
+  .genre-container {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .page-title {
+    font-size: 1.1rem !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  .genre-label {
+    font-size: 9px !important;
+  }
+
+
+  /* ── Auth pages ── */
+  .auth-form-side {
+    padding: 20px 12px !important;
+  }
+
+  .auth-title {
+    font-size: 18px !important;
+  }
+
+  .auth-subtitle {
+    font-size: 13px !important;
+  }
+
+  .field-input {
+    height: 44px !important;
+    font-size: 13px !important;
+  }
+
+  .country-search-input {
+    height: 44px !important;
+    font-size: 13px !important;
+  }
+
+  .auth-submit {
+    height: 46px !important;
+    font-size: 9.5px !important;
+  }
+
+
+  /* ── OTP fixes ── */
+  .otp-digit {
+    width: 38px !important;
+    height: 46px !important;
+    font-size: 16px !important;
+  }
+
+  .otp-box {
+    padding: 24px 16px 20px !important;
+  }
+
+  .otp-title {
+    font-size: 16px !important;
+  }
+
+
+  /* ── Legal / Contact ── */
+  .legal-hero h1 {
+    font-size: 1.1rem !important;
+  }
+
+  .legal-section h2 {
+    font-size: 0.95rem !important;
+  }
+
+  .college-card {
+    padding: 16px 12px !important;
+  }
+
+  .contact-method {
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+
+
+  /* ── Toast ── */
+  .toast {
+    bottom: 20px !important;
+    font-size: 12px !important;
+    padding: 12px 16px !important;
+  }
+
+
+  /* ── Player bar ── */
+  .player-panel,
+  #player-panel,
+  .now-playing-bar {
+    left: 48px !important;
+    width: calc(100% - 48px) !important;
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   EXTRA SMALL  (≤ 360px)  — very narrow phones
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+
+  .otp-digit {
+    width: 34px !important;
+    height: 42px !important;
+    font-size: 15px !important;
+  }
+
+  .otp-inputs {
+    gap: 4px !important;
+  }
+
+  .auth-title {
+    font-size: 16px !important;
+  }
+
+  .genre-grid {
+    gap: 6px !important;
+  }
+
+  .welcome-banner {
+    padding: 14px 12px !important;
+  }
+
+  .albums-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5px !important;
+  }
+
+  .eq-album-art {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .donut-chart {
+    width: 180px !important;
+    height: 180px !important;
+  }
+
+  .freq-sliders-area {
+    height: 150px !important;
   }
 }
