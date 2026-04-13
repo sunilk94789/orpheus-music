@@ -618,6 +618,183 @@
 
 
     /* ══════════════════════════════════════════
+       9b. MOBILE HAMBURGER DRAWER
+           On screens ≤ 480 px the sidebar
+           collapses fully. A hamburger button
+           in the topbar slides it back in.
+    ══════════════════════════════════════════ */
+    function setupMobileDrawer() {
+        /* Only activate on small phones */
+        const MQ = window.matchMedia('(max-width: 480px)');
+
+        /* Inject styles once */
+        if (!document.getElementById('orpheus-drawer-style')) {
+            const s = document.createElement('style');
+            s.id = 'orpheus-drawer-style';
+            s.textContent = `
+/* ── Hamburger button in topbar ── */
+#orpheus-hamburger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 6px;
+    flex-shrink: 0;
+    transition: background 0.18s;
+    order: -1;           /* left of logo */
+}
+#orpheus-hamburger:hover { background: rgba(255,155,81,0.12); }
+#orpheus-hamburger span {
+    display: block;
+    width: 20px; height: 2px;
+    background: var(--text-primary, #BFC9D1);
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+#orpheus-hamburger span + span { margin-top: 5px; }
+
+/* open state → X */
+#orpheus-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#orpheus-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+#orpheus-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── Overlay behind drawer ── */
+#orpheus-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 299;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+#orpheus-overlay.open {
+    display: block;
+    opacity: 1;
+}
+
+/* ── Drawer overrides for mobile ── */
+@media (max-width: 480px) {
+    #orpheus-hamburger { display: flex !important; }
+
+    .sidebar {
+        position: fixed !important;
+        top: 0; left: 0; bottom: 0;
+        width: 220px !important;
+        z-index: 300 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94) !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.4) !important;
+        overflow-y: auto !important;
+        padding-top: 68px !important; /* below topbar */
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+
+    /* Show labels again inside the full-width drawer */
+    .sidebar .nav-label,
+    .sidebar .sidebar-section-lbl,
+    .sidebar .nm-label,
+    .sidebar .nm-toggle,
+    .sidebar .sidebar-divider {
+        display: flex !important;
+    }
+    .sidebar .sidebar-item,
+    .sidebar .nav-btn {
+        justify-content: flex-start !important;
+        padding: 12px 20px !important;
+        gap: 14px !important;
+    }
+    .sidebar .sidebar-nightmode {
+        justify-content: flex-start !important;
+        padding: 12px 20px !important;
+    }
+
+    /* Main content takes full width — drawer floats over it */
+    .main-content, .content-area, #main-content, .content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .page-body {
+        left: 0 !important;
+    }
+    .player-panel, #player-panel, .now-playing-bar {
+        left: 0 !important;
+        width: 100% !important;
+    }
+}
+            `;
+            document.head.appendChild(s);
+        }
+
+        /* Create hamburger button */
+        let btn = document.getElementById('orpheus-hamburger');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'orpheus-hamburger';
+            btn.setAttribute('aria-label', 'Open navigation');
+            btn.innerHTML = '<span></span><span></span><span></span>';
+            const nav = document.getElementById('topNav');
+            if (nav) nav.insertBefore(btn, nav.firstChild);
+        }
+
+        /* Create overlay */
+        let overlay = document.getElementById('orpheus-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'orpheus-overlay';
+            document.body.appendChild(overlay);
+        }
+
+        function openDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.add('mobile-open');
+            overlay.classList.add('open');
+            btn.classList.add('open');
+            btn.setAttribute('aria-label', 'Close navigation');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('open');
+            btn.classList.remove('open');
+            btn.setAttribute('aria-label', 'Open navigation');
+            document.body.style.overflow = '';
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            btn.classList.contains('open') ? closeDrawer() : openDrawer();
+        });
+
+        overlay.addEventListener('click', closeDrawer);
+
+        /* Close drawer when a sidebar link is tapped */
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('.sidebar-item');
+            if (link && MQ.matches) closeDrawer();
+        });
+
+        /* Re-run when viewport resizes out of mobile range */
+        MQ.addEventListener('change', function (e) {
+            if (!e.matches) {
+                closeDrawer();
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+
+    /* ══════════════════════════════════════════
        10. MAIN INIT
     ══════════════════════════════════════════ */
     function init() {
@@ -625,6 +802,7 @@
         injectTopbar();
         injectSidebar();
         setupAvatar();
+        setupMobileDrawer();
 
         interceptLinks();        /* wire exit transitions on all links */
         playEnterTransition();   /* animate sidebar + content on page load */
