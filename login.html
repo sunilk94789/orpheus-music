@@ -138,32 +138,25 @@
 
       <!-- Hero copy -->
       <div class="panel-art">
-        <div class="panel-headline">Built with<br><em>passion.</em><br>A college project.</div>
-        <p class="panel-tagline">Orpheus is an academic project — a full-featured music streaming platform crafted from scratch as a final-year BCA capstone, powered by vanilla web technologies &amp; Supabase.</p>
+        <div class="panel-headline">Your music.<br><em>Your world.</em><br>All in one place.</div>
+        <p class="panel-tagline">A personal music platform — stream your curated library, explore regional charts, and
+          get deep insights into your listening habits.</p>
         <div class="panel-features">
           <div class="panel-feature">
             <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Live Streaming</strong> — stream songs from a real cloud database</div>
+            <div class="panel-feature-text"><strong>Curated library</strong> across every genre you love</div>
           </div>
           <div class="panel-feature">
             <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Studio Equalizer</strong> — 10-band EQ to sculpt your sound</div>
+            <div class="panel-feature-text"><strong>Trending charts</strong> from India &amp; around the world</div>
           </div>
           <div class="panel-feature">
             <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Echo Analytics</strong> — visualise your listening patterns</div>
+            <div class="panel-feature-text"><strong>Studio Equalizer</strong> — tune your listening experience</div>
           </div>
           <div class="panel-feature">
             <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Liked Songs &amp; Playlists</strong> — build your personal library</div>
-          </div>
-          <div class="panel-feature">
-            <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Trending Charts</strong> — discover what's hot in India &amp; worldwide</div>
-          </div>
-          <div class="panel-feature">
-            <div class="panel-feature-dot"></div>
-            <div class="panel-feature-text"><strong>Zero Ads.</strong> Pure music, always — no interruptions</div>
+            <div class="panel-feature-text"><strong>Echo Analytics</strong> — visualise your music patterns</div>
           </div>
         </div>
       </div>
@@ -444,13 +437,13 @@
       try {
         // If username entered, look up email first
         if (!isEmail) {
-          const { data: profile, error: lookupErr } = await supabaseClient
+          const { data: profile } = await supabaseClient
             .from('profiles')
             .select('email')
             .eq('username', identifier)
-            .single();
+            .maybeSingle();   // .single() throws if row not found — maybeSingle() returns null safely
 
-          if (lookupErr || !profile) {
+          if (!profile) {
             showToast('Username not found. Try your email instead.', 'error');
             btn.classList.remove('loading');
             btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
@@ -660,14 +653,12 @@
 
       if (!isEmail) {
         // Look up email from username
-        try {
-          const { data: prof } = await supabaseClient
+        const { data: prof } = await supabaseClient
             .from('profiles')
             .select('email')
             .eq('username', identifier)
-            .single();
-          if (prof) emailToSend = prof.email;
-        } catch (_) { }
+            .maybeSingle();
+        if (prof) emailToSend = prof.email;
       }
 
       _otpUser = identifier;
@@ -744,11 +735,9 @@
       const isEmail = identifier.includes('@');
       let emailToSend = identifier;
       if (!isEmail) {
-        try {
-          const { data: prof } = await supabaseClient
-            .from('profiles').select('email').eq('username', identifier).single();
+        const { data: prof } = await supabaseClient
+            .from('profiles').select('email').eq('username', identifier).maybeSingle();
           if (prof) emailToSend = prof.email;
-        } catch (_) { }
       }
       try {
         const { error } = await supabaseClient.auth.signInWithOtp({
@@ -779,11 +768,9 @@
       const isEmail = identifier.includes('@');
       let emailToVerify = identifier;
       if (!isEmail) {
-        try {
-          const { data: prof } = await supabaseClient
-            .from('profiles').select('email').eq('username', identifier).single();
+        const { data: prof } = await supabaseClient
+            .from('profiles').select('email').eq('username', identifier).maybeSingle();
           if (prof) emailToVerify = prof.email;
-        } catch (_) { }
       }
 
       try {
