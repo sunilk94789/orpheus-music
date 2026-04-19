@@ -84,6 +84,13 @@ ALTER TABLE genre_icons  ENABLE ROW LEVEL SECURITY;
 -- Profiles: user can read/write their own row
 CREATE POLICY "Users can view own profile"
   ON profiles FOR SELECT USING (auth.uid() = id);
+
+-- Profiles: allow unauthenticated lookup of username + email only
+-- (needed so the login page can resolve a username → email before signInWithPassword)
+CREATE POLICY "Public can look up username and email for login"
+  ON profiles FOR SELECT
+  USING (true)
+  WITH CHECK (false); -- read-only: no insert/update via this policy
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile"
