@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   lang        TEXT DEFAULT 'en',
   genres      TEXT[] DEFAULT '{}',
   avatar      TEXT,
+  provider    TEXT DEFAULT 'email',   -- 'email', 'google', or 'both'
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -124,10 +125,11 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   meta JSONB := NEW.raw_user_meta_data;
+  _provider TEXT := COALESCE(NEW.raw_app_meta_data->>'provider', 'email');
 BEGIN
   INSERT INTO public.profiles (
     id, email, username,
-    fname, lname, dob, gender, country, lang, genres, avatar
+    fname, lname, dob, gender, country, lang, genres, avatar, provider
   )
   VALUES (
     NEW.id,
@@ -144,17 +146,19 @@ BEGIN
       THEN ARRAY(SELECT jsonb_array_elements_text(meta->'genres'))
       ELSE '{}'::TEXT[]
     END,
-    meta->>'avatar'
+    meta->>'avatar',
+    _provider
   )
   ON CONFLICT (id) DO UPDATE SET
-    fname   = COALESCE(EXCLUDED.fname,   profiles.fname),
-    lname   = COALESCE(EXCLUDED.lname,   profiles.lname),
-    dob     = COALESCE(EXCLUDED.dob,     profiles.dob),
-    gender  = COALESCE(EXCLUDED.gender,  profiles.gender),
-    country = COALESCE(EXCLUDED.country, profiles.country),
-    lang    = COALESCE(EXCLUDED.lang,    profiles.lang),
-    genres  = CASE WHEN array_length(EXCLUDED.genres, 1) > 0 THEN EXCLUDED.genres ELSE profiles.genres END,
-    avatar  = COALESCE(EXCLUDED.avatar,  profiles.avatar);
+    fname    = COALESCE(EXCLUDED.fname,    profiles.fname),
+    lname    = COALESCE(EXCLUDED.lname,    profiles.lname),
+    dob      = COALESCE(EXCLUDED.dob,      profiles.dob),
+    gender   = COALESCE(EXCLUDED.gender,   profiles.gender),
+    country  = COALESCE(EXCLUDED.country,  profiles.country),
+    lang     = COALESCE(EXCLUDED.lang,     profiles.lang),
+    genres   = CASE WHEN array_length(EXCLUDED.genres, 1) > 0 THEN EXCLUDED.genres ELSE profiles.genres END,
+    avatar   = COALESCE(EXCLUDED.avatar,   profiles.avatar),
+    provider = COALESCE(EXCLUDED.provider, profiles.provider);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -184,3 +188,4 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 --    ('Pop',   'https://...pop-icon.png'),
 --    ('Hip-Hop', 'https://...hiphop-icon.png');
 -- ════════════════════════════════════════════════════════════
+
