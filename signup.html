@@ -367,7 +367,6 @@
         <!-- ═══ STEP 3: Music Taste ═══ -->
         <form id="step3" class="auth-form" novalidate style="display:none">
 
-          <!-- Avatar moved here from step 2 -->
           <div class="field-group">
             <label class="field-label">Profile Avatar</label>
             <div class="avatar-picker">
@@ -1239,7 +1238,8 @@
                 country: country || null,
                 lang,
                 genres: selectedGenres,
-                avatar: selectedAvatar
+                avatar: selectedAvatar,
+                provider: 'email'
               });
             if (profileError) {
               console.warn('Profile upsert error:', profileError.message);
@@ -1263,7 +1263,8 @@
               country: country || null,
               lang,
               genres: selectedGenres,
-              avatar: selectedAvatar
+              avatar: selectedAvatar,
+              provider: 'google'
             });
           if (profileError) console.warn('Profile upsert error:', profileError.message);
         }
@@ -1312,7 +1313,6 @@
     let _otpEmail = '';
     let _otpTimerInterval = null;
 
-    /* generateOtp removed — real Supabase email OTP used instead (TC-F20, TC-S02, TC-S03) */
 
     async function openOtp(email) {
       _otpEmail = email;
