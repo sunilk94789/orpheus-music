@@ -435,16 +435,43 @@
       let emailToUse = identifier;
 
       try {
-        // If username entered, look up email first
+        // If username entered, look up email first (case-insensitive)
         if (!isEmail) {
-          const { data: profile } = await supabaseClient
+          // Try case-insensitive username match via Supabase client
+          let { data: profile, error: lookupError } = await supabaseClient
             .from('profiles')
             .select('email')
-            .eq('username', identifier)
-            .maybeSingle();   // .single() throws if row not found — maybeSingle() returns null safely
+            .ilike('username', identifier)
+            .maybeSingle();
+
+          console.log('[Login] Username lookup for:', identifier, '→ profile:', profile, 'error:', lookupError);
+
+          // Fallback: if client query returned nothing, try direct REST API
+          // (handles RLS edge cases where anon reads may be blocked)
+          if (!profile && !lookupError) {
+            try {
+              const resp = await fetch(
+                `${SUPABASE_URL}/rest/v1/profiles?username=ilike.${encodeURIComponent(identifier)}&select=email&limit=1`,
+                {
+                  headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Accept': 'application/json'
+                  }
+                }
+              );
+              const rows = await resp.json();
+              console.log('[Login] REST fallback result:', rows);
+              if (Array.isArray(rows) && rows.length > 0) {
+                profile = rows[0];
+              }
+            } catch (restErr) {
+              console.warn('[Login] REST fallback failed:', restErr);
+            }
+          }
 
           if (!profile) {
-            showToast('Username not found. Try your email instead.', 'error');
+            showToast('Username not found. Try your email address instead.', 'error');
             btn.classList.remove('loading');
             btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
             return;
@@ -452,29 +479,25 @@
           emailToUse = profile.email;
         }
 
+        // Normalise email to lowercase for Supabase Auth
+        emailToUse = emailToUse.toLowerCase();
+        console.log('[Login] Attempting signInWithPassword for:', emailToUse);
+
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email: emailToUse,
           password: password
         });
 
         if (error) {
+          console.log('[Login] Auth error:', error.message);
           let msg = 'Login failed. Check your credentials.';
 
           if (error.message.includes('Invalid login')) {
-            // Check if the email actually exists in profiles
-            const { data: existingProfile } = await supabaseClient
-              .from('profiles')
-              .select('id')
-              .eq('email', emailToUse)
-              .maybeSingle();
-
-            if (!existingProfile) {
-              msg = 'No account found with this ' + (isEmail ? 'email' : 'username') + '. Please sign up first.';
-            } else {
-              msg = 'Incorrect password. Please try again.';
-            }
+            msg = 'Invalid email or password. Please check your credentials and try again.';
           }
-          if (error.message.includes('Email not confirmed')) msg = 'Please confirm your email first.';
+          if (error.message.includes('Email not confirmed')) {
+            msg = 'Please confirm your email first. Check your inbox for a verification link.';
+          }
           showToast(msg, 'error');
           btn.classList.remove('loading');
           btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
@@ -504,6 +527,7 @@
         setTimeout(() => navigateTo('home.html'), 1000);
 
       } catch (err) {
+        console.error('[Login] Unexpected error:', err);
         showToast('Something went wrong. Please try again.', 'error');
         btn.classList.remove('loading');
         btn.innerHTML = '<span>SIGN IN</span><span>→</span>';
