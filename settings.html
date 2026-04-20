@@ -312,12 +312,12 @@
                         </div>
                     </div>
 
-                    <!-- Change Password -->
+                    <!-- Change / Set Password -->
                     <div class="setting-block">
                         <div class="setting-row" style="align-items:flex-start;padding-bottom:0;border-bottom:none;">
                             <div>
-                                <div class="setting-text" style="font-weight:700">Change Password</div>
-                                <p class="setting-desc">Choose a strong password you haven't used before</p>
+                                <div class="setting-text" style="font-weight:700" id="pwSectionTitle">Change Password</div>
+                                <p class="setting-desc" id="pwSectionDesc">Choose a strong password you haven't used before</p>
                             </div>
                         </div>
                         <div id="pwForm" style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
@@ -348,7 +348,7 @@
                             </div>
                             <div id="pwError" style="font-size:0.8rem;color:#e63946;display:none;"></div>
                             <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
-                                <button onclick="changePassword()" class="freq-reset-btn"
+                                <button onclick="changePassword()" class="freq-reset-btn" id="pwSubmitBtn"
                                     style="padding:9px 24px;font-size:0.78rem;">Update Password</button>
                                 <label
                                     style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--text-muted);user-select:none;">
@@ -757,16 +757,18 @@
             label.style.color = colors[score];
         });
 
+        let _isGoogleUser = false;
+
         function togglePwVisibility() {
             const show = document.getElementById('pwShowToggle').checked;
             const type = show ? 'text' : 'password';
             ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => {
-                document.getElementById(id).type = type;
+                const el = document.getElementById(id);
+                if (el && el.style.display !== 'none') el.type = type;
             });
         }
 
-        function changePassword() {
-            const current = document.getElementById('pwCurrent').value;
+        async function changePassword() {
             const nw = document.getElementById('pwNew').value;
             const confirm = document.getElementById('pwConfirm').value;
             const errEl = document.getElementById('pwError');
@@ -776,22 +778,99 @@
             hideErr();
 
             // Validation
-            if (!current) { showErr('Please enter your current password.'); return; }
+            if (!_isGoogleUser) {
+                const current = document.getElementById('pwCurrent').value;
+                if (!current) { showErr('Please enter your current password.'); return; }
+            }
             if (nw.length < 8) { showErr('New password must be at least 8 characters.'); return; }
-            if (nw === current) { showErr('New password must differ from your current password.'); return; }
             if (nw !== confirm) { showErr('Passwords do not match.'); return; }
 
-            // Simulate save (real apps would call an API here)
-            localStorage.setItem('orpheus_password_hash', btoa(nw));
+            try {
+                const sb = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
 
-            // Clear fields
-            ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('pwStrengthWrap').style.display = 'none';
-            document.getElementById('pwShowToggle').checked = false;
-            togglePwVisibility();
+                // For email users: verify current password first
+                if (!_isGoogleUser) {
+                    const current = document.getElementById('pwCurrent').value;
+                    const { data: { user } } = await sb.auth.getUser();
+                    const { error: verifyErr } = await sb.auth.signInWithPassword({
+                        email: user.email,
+                        password: current
+                    });
+                    if (verifyErr) {
+                        showErr('Current password is incorrect.');
+                        return;
+                    }
+                }
 
-            showToast('Password updated successfully');
+                // Update password via Supabase Auth
+                const { error: updateErr } = await sb.auth.updateUser({ password: nw });
+                if (updateErr) {
+                    showErr('Failed to update password: ' + updateErr.message);
+                    return;
+                }
+
+                // If Google user just set a password, update provider to 'both'
+                if (_isGoogleUser) {
+                    const { data: { user } } = await sb.auth.getUser();
+                    await sb.from('profiles').update({ provider: 'both' }).eq('id', user.id);
+                    _isGoogleUser = false;
+                    setupPasswordUI();
+                }
+
+                // Clear fields
+                ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('pwStrengthWrap').style.display = 'none';
+                document.getElementById('pwShowToggle').checked = false;
+                togglePwVisibility();
+
+                showToast('Password updated successfully');
+            } catch (err) {
+                console.error('Password update error:', err);
+                showErr('Something went wrong. Please try again.');
+            }
         }
+
+        /* Adjust the password UI based on auth provider */
+        async function setupPasswordUI() {
+            try {
+                const sb = typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) return;
+
+                const { data: profile } = await sb.from('profiles')
+                    .select('provider')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                const isGoogle = profile?.provider === 'google';
+                _isGoogleUser = isGoogle;
+
+                const titleEl = document.getElementById('pwSectionTitle');
+                const descEl = document.getElementById('pwSectionDesc');
+                const currentEl = document.getElementById('pwCurrent');
+                const submitBtn = document.getElementById('pwSubmitBtn');
+
+                if (isGoogle) {
+                    titleEl.textContent = 'Set a Password';
+                    descEl.textContent = 'You signed up with Google. Set a password to also log in with email and password.';
+                    currentEl.style.display = 'none';
+                    submitBtn.textContent = 'Set Password';
+                } else {
+                    titleEl.textContent = 'Change Password';
+                    descEl.textContent = 'Choose a strong password you haven\'t used before';
+                    currentEl.style.display = '';
+                    submitBtn.textContent = 'Update Password';
+                }
+
+                // Also populate email in the account section
+                const emailEl = document.getElementById('settingsEmail');
+                if (emailEl) emailEl.textContent = user.email || '';
+            } catch (err) {
+                console.warn('Could not detect auth provider:', err);
+            }
+        }
+
+        setupPasswordUI();
 
         /* ──────────────────────────────
            CLEAR CACHE
