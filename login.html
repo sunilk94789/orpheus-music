@@ -414,8 +414,6 @@
     let _otpUser = '';
     let _otpTimerInterval = null;
 
-    /* generateOtp removed — real Supabase email OTP used instead (TC-F20, TC-S02, TC-S03) */
-
     /* ── Login → Supabase Auth ── */
     async function handleLogin(e) {
       e.preventDefault();
@@ -493,7 +491,22 @@
           let msg = 'Login failed. Check your credentials.';
 
           if (error.message.includes('Invalid login')) {
-            msg = 'Invalid email or password. Please check your credentials and try again.';
+            // Check if this account was created via Google (no password set)
+            try {
+              const { data: providerCheck } = await supabaseClient
+                .from('profiles')
+                .select('provider')
+                .eq('email', emailToUse)
+                .maybeSingle();
+
+              if (providerCheck?.provider === 'google') {
+                msg = 'This account uses Google sign-in. Please use the "Google" button below to log in.';
+              } else {
+                msg = 'Invalid email or password. Please check your credentials and try again.';
+              }
+            } catch (e) {
+              msg = 'Invalid email or password. Please check your credentials and try again.';
+            }
           }
           if (error.message.includes('Email not confirmed')) {
             msg = 'Please confirm your email first. Check your inbox for a verification link.';
